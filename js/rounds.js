@@ -2,119 +2,170 @@
   if (!requireAuthOrRedirect()) return;
 
   const s = ensureSession();
-  s.selectedChallenge = 1;
+  s.selectedChallenge = 1; // تحدي واحد فقط
   saveSession(s);
 
-  const teamAName = (s.teams && s.teams.a && s.teams.a.trim()) ? s.teams.a.trim() : "الفريق الأول";
-  const teamBName = (s.teams && s.teams.b && s.teams.b.trim()) ? s.teams.b.trim() : "الفريق الثاني";
+  const sessionLine = $("sessionLine");
+  const scorebar = $("scorebar");
+  const content = $("content");
 
-  $("sessionLine").textContent = `${teamAName} ضد ${teamBName}`;
+  const progressLine = $("progressLine");
+  const progressFill = $("progressFill");
 
   const btnLogout = $("btnLogout");
   const btnNewGame = $("btnNewGame");
+
   btnLogout.addEventListener("click", () => logoutWipeAll());
-  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
-
-  const scorebar = $("scorebar");
-  renderScorebar(scorebar, s);
-
-  // ✅ زر فتح جميع الأسئلة المقفولة (بدون تأثير على النقاط ولا أسماء الفرق)
-  const btnUnlockAll = document.getElementById("btnUnlockAll");
-  btnUnlockAll.addEventListener("click", () => {
-    const ns = ensureSession();
-
-    // احذف الأقفال فقط
-    if (ns.locks) delete ns.locks;
-
-    // (اختياري) إزالة مؤشرات “جولة مقفولة” لو كانت محفوظة بشكل مختلف
-    if (ns.roundLocks) delete ns.roundLocks;
-
-    saveSession(ns);
+  btnNewGame.addEventListener("click", () => {
+    resetGameKeepNames(true);
     window.location.reload();
   });
 
-  // تحميل بيانات التحدي 1
+  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
+  renderScorebar(scorebar, s);
+
   let data;
   try {
     data = await loadChallengeData(1);
   } catch (e) {
-    document.getElementById("categoriesWrap").innerHTML = `<div class="muted">تعذر تحميل بيانات الفئات.</div>`;
+    content.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات اللعبة (data/challenges/1.json).</div></div>`;
     return;
   }
 
-  const wrap = document.getElementById("categoriesWrap");
-  wrap.innerHTML = "";
+  const challengeId = String(data.id);
 
-  // عرض الفئات + الجولات
+  // ---- compute global progress (all questions locked) ----
+  let totalQ = 0;
+  let lockedQ = 0;
+
   for (const cat of data.categories) {
-    const block = document.createElement("div");
+    for (const round of cat.rounds) {
+      totalQ += round.questions.length;
+      for (const q of round.questions) {
+        if (isQuestionLocked(s, challengeId, round.id, q.id)) lockedQ++;
+      }
+    }
+  }
+
+  const pct = totalQ ? Math.round((lockedQ / totalQ) * 100) : 0;
+  progressLine.textContent = `التقدّم: ${lockedQ}/${totalQ} سؤال مقفل (${pct}%)`;
+  progressFill.style.width = `${pct}%`;
+
+  // ---- render categories as large premium blocks ----
+  content.innerHTML = "";
+
+  data.categories.forEach(cat => {
+    // compute category stats
+    const catTotalRounds = cat.rounds.length;
+    let catLockedRounds = 0;
+
+    let catTotalQ = 0;
+    let catLockedQ = 0;
+
+    cat.rounds.forEach(r => {
+      catTotalQ += r.questions.length;
+
+      const fullyLocked = computeRoundFullyLocked(s, challengeId, r);
+      if (fullyLocked) {
+        catLockedRounds++;
+        setRoundLocked(s, challengeId, r.id, true);
+      } else {
+        setRoundLocked(s, challengeId, r.id, false);
+      }
+
+      for (const q of r.questions) {
+        if (isQuestionLocked(s, challengeId, r.id, q.id)) catLockedQ++;
+      }
+    });
+
+    const catPct = catTotalQ ? Math.round((catLockedQ / catTotalQ) * 100) : 0;
+
+    const block = document.createElement("section");
     block.className = "categoryBlock";
-    // تلوين حسب النوع إن كان موجود
-    if (cat.type) block.setAttribute("data-type", cat.type);
+    block.setAttribute("data-type", cat.id); // grandparents / parents / grandkids
 
-    const head = document.createElement("div");
-    head.className = "categoryBlock__head";
+    block.innerHTML = `
+      <div class="categoryBlock__head">
+        <div class="categoryBlock__titles">
+          <div class="categoryBlock__title">${escapeHtml(cat.title)}</div>
+          <div class="categoryBlock__sub">${escapeHtml(cat.subtitle || "")}</div>
+        </div>
 
-    const left = document.createElement("div");
-    const title = document.createElement("div");
-    title.className = "categoryBlock__title";
-    title.textContent = cat.title;
+        <div class="categoryBlock__stats">
+          <span class="badge ${catLockedRounds === catTotalRounds ? "badge--locked" : "badge--open"}">
+            ${catLockedRounds === catTotalRounds ? "مقفلة بالكامل" : "متاحة"}
+          </span>
+          <span class="badge">الجولات: ${catLockedRounds}/${catTotalRounds}</span>
+          <span class="badge">الأسئلة: ${catLockedQ}/${catTotalQ}</span>
+        </div>
+      </div>
 
-    const sub = document.createElement("div");
-    sub.className = "categoryBlock__sub";
-    sub.textContent = cat.subtitle || "";
+      <div class="categoryBlock__bar">
+        <div class="categoryBar" aria-hidden="true">
+          <div class="categoryBar__fill" style="width:${catPct}%"></div>
+        </div>
+        <div class="muted categoryBlock__barTxt">${catPct}% من أسئلة الفئة مقفلة</div>
+      </div>
 
-    left.appendChild(title);
-    if (cat.subtitle) left.appendChild(sub);
+      <div class="categoryBlock__rounds" id="rounds-${cat.id}"></div>
+    `;
 
-    head.appendChild(left);
-    block.appendChild(head);
+    content.appendChild(block);
 
-    const roundsGrid = document.createElement("div");
-    roundsGrid.className = "categoryBlock__rounds";
+    const roundsWrap = block.querySelector(`#rounds-${cat.id}`);
 
-    for (const r of cat.rounds) {
-      const card = document.createElement("div");
-      card.className = "roundCard";
+    cat.rounds.forEach(r => {
+      const fullyLocked = isRoundLocked(s, challengeId, r.id) || computeRoundFullyLocked(s, challengeId, r);
 
-      const top = document.createElement("div");
-      top.className = "roundCard__top";
+      const roundTotal = r.questions.length;
+      let roundLocked = 0;
+      r.questions.forEach(q => {
+        if (isQuestionLocked(s, challengeId, r.id, q.id)) roundLocked++;
+      });
 
-      const rTitle = document.createElement("div");
-      rTitle.className = "roundCard__title";
-      rTitle.textContent = r.title;
+      const roundCard = document.createElement("div");
+      roundCard.className = `roundCard ${fullyLocked ? "roundCard--locked" : ""}`;
 
-      const meta = document.createElement("div");
-      meta.className = "roundCard__meta";
-      meta.textContent = "٤ أسئلة";
+      roundCard.innerHTML = `
+        <div class="roundCard__top">
+          <div>
+            <div class="roundCard__title">${escapeHtml(r.title)}</div>
+            <div class="roundCard__meta">${escapeHtml(r.hint || "هذه الجولة تحتوي 4 أسئلة")}</div>
+          </div>
+          <span class="badge ${fullyLocked ? "badge--locked" : "badge--open"}">${fullyLocked ? "مقفول" : "متاح"}</span>
+        </div>
 
-      top.appendChild(rTitle);
-      card.appendChild(top);
-      card.appendChild(meta);
+        <div class="roundCard__mid">
+          <div class="roundDots" aria-hidden="true">
+            ${Array.from({ length: roundTotal }).map((_, i) => {
+              const qid = `q${i+1}`;
+              const locked = isQuestionLocked(s, challengeId, r.id, qid);
+              return `<span class="dot ${locked ? "dot--on" : ""}"></span>`;
+            }).join("")}
+          </div>
+          <div class="muted">مقفلة: ${roundLocked}/${roundTotal}</div>
+        </div>
 
-      const actions = document.createElement("div");
-      actions.className = "roundCard__actions";
+        <div class="roundCard__actions">
+          <button class="btn ${fullyLocked ? "btn--ghost" : "btn--primary"} btn--sm" type="button" ${fullyLocked ? "disabled" : ""}>
+            ${fullyLocked ? "🔒 مقفل" : "ابدأ الجولة"}
+          </button>
+        </div>
+      `;
 
-      const btn = document.createElement("button");
-      btn.className = "btn btn--primary btn--sm";
-      btn.type = "button";
-      btn.textContent = "اختيار";
-
-      btn.addEventListener("click", () => {
+      const startBtn = roundCard.querySelector("button");
+      startBtn.addEventListener("click", () => {
         const ns = ensureSession();
+        ns.selectedChallenge = 1;
+        ns.selectedCategoryId = cat.id;
         ns.selectedRoundId = r.id;
-        // لا نحدد سؤال هنا — يتم اختيار السؤال من questions.html
+        ns.lastUpdatedAt = nowISO();
         saveSession(ns);
         window.location.href = "questions.html";
       });
 
-      actions.appendChild(btn);
-      card.appendChild(actions);
+      roundsWrap.appendChild(roundCard);
+    });
+  });
 
-      roundsGrid.appendChild(card);
-    }
-
-    block.appendChild(roundsGrid);
-    wrap.appendChild(block);
-  }
 })();
