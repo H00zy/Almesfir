@@ -2,6 +2,8 @@
   if (!requireAuthOrRedirect()) return;
 
   const s = ensureSession();
+  s.selectedChallenge = 1;
+  saveSession(s);
 
   const sessionLine = $("sessionLine");
   const scorebar = $("scorebar");
@@ -17,7 +19,7 @@
   btnLogout.addEventListener("click", () => logoutWipeAll());
   btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
 
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"} • تحدي رقم ${s.selectedChallenge || 1}`;
+  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
   renderScorebar(scorebar, s);
 
   if (!s.selectedRoundId || !s.selectedQuestionId) {
@@ -27,15 +29,14 @@
 
   let data;
   try {
-    data = await loadChallengeData(s.selectedChallenge || 1);
+    data = await loadChallengeData(1);
   } catch (e) {
-    questionText.textContent = "تعذر تحميل بيانات التحدي.";
+    questionText.textContent = "تعذر تحميل بيانات اللعبة.";
     return;
   }
 
   const challengeId = String(data.id);
 
-  // Find round and question
   let selectedCat = null;
   let selectedRound = null;
   let selectedQ = null;
@@ -60,7 +61,6 @@
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
   questionMeta.textContent = `القيمة: 10 نقاط • سؤال ID: ${selectedQ.id}`;
 
-  // Lock check
   const alreadyLocked = isQuestionLocked(s, challengeId, selectedRound.id, selectedQ.id);
   if (alreadyLocked) {
     lockedNotice.style.display = "block";
@@ -69,10 +69,8 @@
     return;
   }
 
-  // Render question text
   questionText.textContent = selectedQ.text || "—";
 
-  // Assignment
   function updateAssignedPill() {
     const ns = ensureSession();
     const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
@@ -96,6 +94,7 @@
 
   btnAssignA.addEventListener("click", () => {
     const ns = ensureSession();
+    ns.selectedChallenge = 1;
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, "a");
     setStatus(statusBox, "تم تعيين السؤال للفريق 1.", "ok");
     updateAssignedPill();
@@ -103,6 +102,7 @@
 
   btnAssignB.addEventListener("click", () => {
     const ns = ensureSession();
+    ns.selectedChallenge = 1;
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, "b");
     setStatus(statusBox, "تم تعيين السؤال للفريق 2.", "ok");
     updateAssignedPill();
@@ -120,7 +120,6 @@
     updateAssignedPill();
   });
 
-  // Award / lock
   btnAward.addEventListener("click", () => {
     const ns = ensureSession();
     const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
@@ -133,7 +132,6 @@
 
     lockQuestion(ns, challengeId, selectedRound.id, selectedQ.id);
 
-    // Round lock update
     const fullyLocked = computeRoundFullyLocked(ns, challengeId, selectedRound);
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
@@ -167,9 +165,7 @@
   const btnPlus10 = $("btnPlus10");
   const btnMinus10 = $("btnMinus10");
 
-  function renderTimer() {
-    timerText.textContent = formatMMSS(total);
-  }
+  function renderTimer() { timerText.textContent = formatMMSS(total); }
   renderTimer();
 
   function stopTimer() {
