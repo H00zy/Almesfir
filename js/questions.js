@@ -2,23 +2,29 @@
   if (!requireAuthOrRedirect()) return;
 
   const s = ensureSession();
-  s.selectedChallenge = 1;
-  saveSession(s);
+  const sessionLine = $("sessionLine");
+  const scorebar = $("scorebar");
+  const roundTitle = $("roundTitle");
+  const roundHint = $("roundHint");
+  const questionsGrid = $("questionsGrid");
 
-  const teamAName = (s.teams && s.teams.a && s.teams.a.trim()) ? s.teams.a.trim() : "الفريق الأول";
-  const teamBName = (s.teams && s.teams.b && s.teams.b.trim()) ? s.teams.b.trim() : "الفريق الثاني";
-
-  $("sessionLine").textContent = `${teamAName} ضد ${teamBName}`;
+  const finishCard = $("finishCard");
+  const winnerLine = $("winnerLine");
 
   const btnLogout = $("btnLogout");
   const btnNewGame = $("btnNewGame");
-  btnLogout.addEventListener("click", () => logoutWipeAll());
-  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
+  const btnNewGame2 = $("btnNewGame2");
+  const btnLogout2 = $("btnLogout2");
 
-  const scorebar = $("scorebar");
+  btnLogout.addEventListener("click", () => logoutWipeAll());
+  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
+
+  if (btnNewGame2) btnNewGame2.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
+  if (btnLogout2) btnLogout2.addEventListener("click", () => logoutWipeAll());
+
+  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"} • تحدي رقم ${s.selectedChallenge || 1}`;
   renderScorebar(scorebar, s);
 
-  // لازم يكون فيه جولة مختارة
   if (!s.selectedRoundId) {
     window.location.href = "rounds.html";
     return;
@@ -26,17 +32,15 @@
 
   let data;
   try {
-    data = await loadChallengeData(1);
+    data = await loadChallengeData(s.selectedChallenge || 1);
   } catch (e) {
-    $("questionsGrid").innerHTML = `<div class="muted">تعذر تحميل بيانات الأسئلة.</div>`;
+    questionsGrid.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات التحدي.</div></div>`;
     return;
   }
 
   const challengeId = String(data.id);
-  const points = (data.pointsPerQuestion || 10);
-  $("pointsVal").textContent = String(points);
 
-  // استخراج الجولة المختارة
+  // find selected round
   let selectedCat = null;
   let selectedRound = null;
 
@@ -54,106 +58,79 @@
     return;
   }
 
-  $("roundTitle").textContent = `${selectedCat.title} • ${selectedRound.title}`;
+  roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
+  roundHint.textContent = selectedRound.hint || "كل سؤال = 10 نقاط. بعد الاستخدام يُقفل.";
 
-  const grid = $("questionsGrid");
-  grid.innerHTML = "";
+  // update round lock if fully locked
+  const fullyLocked = computeRoundFullyLocked(s, challengeId, selectedRound);
+  setRoundLocked(s, challengeId, selectedRound.id, fullyLocked);
 
-  // بناء 4 أسئلة
-  for (const q of selectedRound.questions) {
+  // render questions
+  questionsGrid.innerHTML = "";
+  selectedRound.questions.forEach((q, idx) => {
     const locked = isQuestionLocked(s, challengeId, selectedRound.id, q.id);
-    const assigned = getAssignedTeam(s, challengeId, selectedRound.id, q.id); // a/b/null
+    const assigned = getAssignedTeam(s, challengeId, selectedRound.id, q.id);
 
     const card = document.createElement("div");
     card.className = "qcard";
 
-    const top = document.createElement("div");
-    top.className = "qcard__top";
-
-    const title = document.createElement("div");
-    title.className = "qcard__title";
-    title.textContent = `سؤال ${String(q.id).replace(/[^\d]/g,'') || ""}`.trim() || "سؤال";
-
-    const badge = document.createElement("span");
-    badge.className = `badge ${locked ? "badge--locked" : "badge--open"}`;
-    badge.textContent = locked ? "مقفول" : "مفتوح";
-
-    top.appendChild(title);
-    top.appendChild(badge);
-
-    const meta = document.createElement("div");
-    meta.className = "qcard__meta";
-    meta.textContent = `القيمة: ${points} نقاط`;
-
-    // تعيين الفريق
-    const assign = document.createElement("div");
-    assign.className = "qcard__assign";
-
-    const assignLabel = document.createElement("span");
-    assignLabel.className = "pill";
-    assignLabel.textContent = assigned
-      ? `موجّه إلى: ${assigned === "a" ? teamAName : teamBName}`
+    const assignLabel = assigned
+      ? (assigned === "a" ? (s.teams.a || "الفريق 1") : (s.teams.b || "الفريق 2"))
       : "غير معيّن";
 
-    const btnA = document.createElement("button");
-    btnA.className = "btn btn--ghost btn--sm";
-    btnA.type = "button";
-    btnA.textContent = `تعيين لـ ${teamAName}`;
-    btnA.disabled = locked;
+    card.innerHTML = `
+      <div class="qcard__top">
+        <div>
+          <div class="qcard__title">سؤال ${idx + 1}</div>
+          <div class="qcard__meta">القيمة: 10 نقاط • الحالة: ${locked ? "🔒 مقفل" : "✅ متاح"}</div>
+        </div>
+        <span class="badge ${locked ? "badge--locked" : "badge--open"}">${locked ? "مقفول" : "مفتوح"}</span>
+      </div>
 
-    const btnB = document.createElement("button");
-    btnB.className = "btn btn--ghost btn--sm";
-    btnB.type = "button";
-    btnB.textContent = `تعيين لـ ${teamBName}`;
-    btnB.disabled = locked;
+      <div class="qcard__assign">
+        <span class="pill">الفريق المعيّن: <strong>${escapeHtml(assignLabel)}</strong></span>
+        <div class="row row--wrap">
+          <button class="btn btn--ghost btn--sm" type="button" data-assign="a" ${locked ? "disabled" : ""}>تعيين للفريق 1</button>
+          <button class="btn btn--ghost btn--sm" type="button" data-assign="b" ${locked ? "disabled" : ""}>تعيين للفريق 2</button>
+        </div>
+      </div>
 
-    const btnOpen = document.createElement("button");
-    btnOpen.className = "btn btn--primary btn--sm";
-    btnOpen.type = "button";
-    btnOpen.textContent = "افتح السؤال";
-    // ✅ الجديد: ما تقدر تفتح بدون تعيين
-    btnOpen.disabled = locked || !assigned;
+      <div class="qcard__actions">
+        <button class="btn ${locked ? "btn--ghost" : "btn--primary"}" type="button" data-open ${locked ? "disabled" : ""}>
+          ${locked ? "مقفل" : "افتح السؤال"}
+        </button>
+      </div>
+    `;
 
-    btnA.addEventListener("click", () => {
-      const ns = ensureSession();
-      setAssignedTeam(ns, challengeId, selectedRound.id, q.id, "a");
-      assignLabel.textContent = `موجّه إلى: ${teamAName}`;
-      btnOpen.disabled = false; // صار معيّن
+    // assignment handlers
+    card.querySelectorAll("button[data-assign]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const team = btn.getAttribute("data-assign");
+        const ns = ensureSession();
+        setAssignedTeam(ns, challengeId, selectedRound.id, q.id, team);
+        window.location.reload();
+      });
     });
 
-    btnB.addEventListener("click", () => {
+    // open question
+    card.querySelector("button[data-open]").addEventListener("click", () => {
       const ns = ensureSession();
-      setAssignedTeam(ns, challengeId, selectedRound.id, q.id, "b");
-      assignLabel.textContent = `موجّه إلى: ${teamBName}`;
-      btnOpen.disabled = false; // صار معيّن
-    });
-
-    btnOpen.addEventListener("click", () => {
-      // حماية إضافية
-      const ns = ensureSession();
-      const a = getAssignedTeam(ns, challengeId, selectedRound.id, q.id);
-      if (!a) return;
-
-      ns.selectedChallenge = 1;
       ns.selectedQuestionId = q.id;
+      ns.lastUpdatedAt = nowISO();
       saveSession(ns);
       window.location.href = "game.html";
     });
 
-    assign.appendChild(assignLabel);
-    assign.appendChild(btnA);
-    assign.appendChild(btnB);
+    questionsGrid.appendChild(card);
+  });
 
-    const actions = document.createElement("div");
-    actions.className = "qcard__actions";
-    actions.appendChild(btnOpen);
-
-    card.appendChild(top);
-    card.appendChild(meta);
-    card.appendChild(assign);
-    card.appendChild(actions);
-
-    grid.appendChild(card);
+  // If all questions in whole challenge locked => show finish
+  const allDone = computeAllQuestionsLocked(s, data);
+  if (allDone) {
+    finishCard.style.display = "block";
+    const w = computeWinner(s);
+    winnerLine.textContent = w.line;
+  } else {
+    finishCard.style.display = "none";
   }
-
 })();
