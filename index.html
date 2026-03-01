@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لعبة العائلة - دخول</title>
+  <link rel="icon" href="assets/icons/favicon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
+        <div class="brand__txt">
+          <div class="brand__title">لعبة العائلة</div>
+          <div class="brand__sub">نسخة العيد • دخول محمي</div>
+        </div>
+      </div>
+
+      <div class="topbar__actions">
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">تسجيل خروج</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card card--hero">
+        <div class="hero">
+          <div class="hero__badge pill">RTL • Mobile • Smooth UI</div>
+          <h1 class="hero__title">ابدأ جلسة جديدة</h1>
+          <p class="hero__desc">
+            ادخل كلمة المرور، ثم اكتب أسماء الفريقين واختر رقم التحدي (1–7).
+            سيتم حفظ الجلسة تلقائيًا.
+          </p>
+        </div>
+
+        <div class="grid grid--2">
+          <div class="field">
+            <label class="label" for="password">كلمة المرور</label>
+            <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="off" />
+            <div class="hint">* للحماية البسيطة (Client-side) لغرض العرض/البيع.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="challengeNo">رقم التحدي</label>
+            <select id="challengeNo" class="input">
+              <option value="1">1 (مثال جاهز)</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+            </select>
+            <div class="hint">تقدر تضيف/تعدل الأسئلة من ملفات JSON.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="teamA">اسم الفريق الأول</label>
+            <input id="teamA" class="input" type="text" placeholder="مثال: فريق A" maxlength="24" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="teamB">اسم الفريق الثاني</label>
+            <input id="teamB" class="input" type="text" placeholder="مثال: فريق B" maxlength="24" />
+          </div>
+        </div>
+
+        <div class="row row--space">
+          <div class="status" id="statusBox" aria-live="polite"></div>
+          <div class="row">
+            <button id="btnNewGame" class="btn btn--ghost" type="button">New Game</button>
+            <button id="btnContinue" class="btn btn--primary" type="button">دخول</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card__title">معلومة سريعة</div>
+        <div class="muted">
+          • التنقل: دخول → اختيار الجولة/الفئة → قائمة الأسئلة (4) → شاشة اللعب
+          <br/>
+          • كل سؤال = 10 نقاط، وبعد الاستخدام يُقفل ولا يفتح مرة ثانية
+          <br/>
+          • عند انتهاء كل الأسئلة سيتم إعلان الفائز
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="muted">© لعبة العائلة • نسخة GitHub Pages</div>
+    </footer>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>
