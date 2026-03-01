@@ -1,63 +1,68 @@
-// صفحة الدخول فقط — لا تستدعي requireAuthOrRedirect هنا.
-
 (function () {
-  const form = document.getElementById("loginForm");
-  const pass = document.getElementById("password");
-  const teamA = document.getElementById("teamA");
-  const teamB = document.getElementById("teamB");
-  const status = document.getElementById("status");
-  const btnClearAll = document.getElementById("btnClearAll");
+  const s = ensureSession();
 
-  // ✅ غيّر كلمة المرور هنا
-  const DEMO_PASSWORD = "1234";
+  const statusBox = $("statusBox");
+  const password = $("password");
+  const teamA = $("teamA");
+  const teamB = $("teamB");
+  const challengeNo = $("challengeNo");
 
-  // لو كان مسجل دخول سابقاً، ودّه مباشرة
-  const s0 = ensureSession();
-  if (s0.auth === true) {
-    window.location.href = "rounds.html";
-    return;
+  const btnContinue = $("btnContinue");
+  const btnLogout = $("btnLogout");
+  const btnNewGame = $("btnNewGame");
+
+  // Prefill from session
+  teamA.value = s.teams.a || "";
+  teamB.value = s.teams.b || "";
+  challengeNo.value = String(s.selectedChallenge || 1);
+
+  // If already authed: show hint
+  if (s.authed) {
+    setStatus(statusBox, "أنت مسجل دخول. تقدر تكمل مباشرة أو تبدأ New Game.", "ok");
+    password.placeholder = "مسجل دخول بالفعل";
   }
 
-  btnClearAll.addEventListener("click", () => {
-    localStorage.removeItem("family_game_session_v1");
-    status.className = "status status--ok";
-    status.textContent = "تم مسح كل البيانات.";
+  btnLogout.addEventListener("click", () => logoutWipeAll());
+
+  btnNewGame.addEventListener("click", () => {
+    // New Game keeps names by default, but on index we respect current inputs
+    const keep = (teamA.value.trim() || teamB.value.trim()) ? true : true;
+    const ns = resetGameKeepNames(keep);
+    ns.teams.a = teamA.value.trim();
+    ns.teams.b = teamB.value.trim();
+    ns.selectedChallenge = Number(challengeNo.value || 1);
+    saveSession(ns);
+    setStatus(statusBox, "تمت إعادة ضبط اللعبة (نقاط/أقفال).", "ok");
   });
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
+  btnContinue.addEventListener("click", async () => {
+    const p = password.value.trim();
+    const a = teamA.value.trim();
+    const b = teamB.value.trim();
+    const ch = Number(challengeNo.value || 1);
 
-    const entered = (pass.value || "").trim();
-
-    if (entered !== DEMO_PASSWORD) {
-      status.className = "status status--bad";
-      status.textContent = "كلمة المرور غير صحيحة.";
-      return;
+    if (!s.authed) {
+      if (!p) return setStatus(statusBox, "اكتب كلمة المرور.", "bad");
+      if (p !== DEFAULT_PASSWORD) return setStatus(statusBox, "كلمة المرور غير صحيحة.", "bad");
     }
 
-    const s = ensureSession();
+    if (!a || !b) return setStatus(statusBox, "اكتب أسماء الفريقين.", "bad");
 
-    // احفظ الجلسة
-    s.auth = true;
-    s.selectedChallenge = 1;
+    // Validate challenge JSON exists
+    try {
+      await loadChallengeData(ch);
+    } catch (e) {
+      return setStatus(statusBox, "ملف التحدي غير موجود/غير قابل للتحميل. تأكد من data/challenges.", "bad");
+    }
 
-    // أسماء الفرق
-    s.teams = {
-      a: (teamA.value || "").trim() || "الفريق الأول",
-      b: (teamB.value || "").trim() || "الفريق الثاني"
-    };
+    const ns = ensureSession();
+    ns.authed = true;
+    ns.teams.a = a;
+    ns.teams.b = b;
+    ns.selectedChallenge = ch;
+    ns.lastUpdatedAt = nowISO();
+    saveSession(ns);
 
-    // إذا ما فيه نقاط، ابدأ من صفر
-    if (!s.scores) s.scores = { a: 0, b: 0 };
-
-    // لا نلمس locks هنا — إذا تبغى دخول جديد يفتح كل شيء قلّي
-    saveSession(s);
-
-    status.className = "status status--ok";
-    status.textContent = "تم الدخول بنجاح…";
-
-    window.setTimeout(() => {
-      window.location.href = "rounds.html";
-    }, 150);
+    window.location.href = "rounds.html";
   });
 })();
