@@ -2,11 +2,11 @@
   if (!requireAuthOrRedirect()) return;
 
   const s = ensureSession();
-  s.selectedChallenge = 1; // تحدي واحد فقط
+  s.selectedChallenge = 1;
   saveSession(s);
 
-  const teamAName = s.teams.a || "الفريق الأول";
-  const teamBName = s.teams.b || "الفريق الثاني";
+  const teamAName = (s.teams && s.teams.a && s.teams.a.trim()) ? s.teams.a.trim() : "الفريق الأول";
+  const teamBName = (s.teams && s.teams.b && s.teams.b.trim()) ? s.teams.b.trim() : "الفريق الثاني";
 
   const sessionLine = $("sessionLine");
   const scorebar = $("scorebar");
@@ -82,6 +82,8 @@
 
     const card = document.createElement("div");
     card.className = "qcard";
+
+    // ملاحظة: حتى لو صار كاش لجزء من النص، بنضبطه بعد الإنشاء مباشرة
     card.innerHTML = `
       <div class="qcard__top">
         <div>
@@ -92,19 +94,25 @@
       </div>
 
       <div class="qcard__assign">
-        <span class="pill">الفريق المعيّن: <strong>${escapeHtml(assignedLabel)}</strong></span>
+        <span class="pill">الفريق المعيّن: <strong class="assignedLabel">${escapeHtml(assignedLabel)}</strong></span>
         <div class="row row--wrap">
-          <button class="btn btn--ghost btn--sm" type="button" data-assign="a" ${locked ? "disabled" : ""}>تعيين لـ ${escapeHtml(teamAName)}</button>
-          <button class="btn btn--ghost btn--sm" type="button" data-assign="b" ${locked ? "disabled" : ""}>تعيين لـ ${escapeHtml(teamBName)}</button>
+          <button class="btn btn--ghost btn--sm btnAssignA" type="button" data-assign="a" ${locked ? "disabled" : ""}>تعيين لـ ${escapeHtml(teamAName)}</button>
+          <button class="btn btn--ghost btn--sm btnAssignB" type="button" data-assign="b" ${locked ? "disabled" : ""}>تعيين لـ ${escapeHtml(teamBName)}</button>
         </div>
       </div>
 
       <div class="qcard__actions">
-        <button class="btn ${locked ? "btn--ghost" : "btn--primary"}" type="button" data-open ${locked ? "disabled" : ""}>
+        <button class="btn ${locked ? "btn--ghost" : "btn--primary"} btnOpen" type="button" data-open ${locked ? "disabled" : ""}>
           ${locked ? "هذا السؤال مقفل" : "افتح السؤال"}
         </button>
       </div>
     `;
+
+    // ✅ ضمان 100% أن النص يكون بأسماء الفرق (حتى لو كان فيه شيء قديم)
+    const btnA = card.querySelector(".btnAssignA");
+    const btnB = card.querySelector(".btnAssignB");
+    if (btnA) btnA.textContent = `تعيين لـ ${teamAName}`;
+    if (btnB) btnB.textContent = `تعيين لـ ${teamBName}`;
 
     // تعيين الفريق
     card.querySelectorAll("button[data-assign]").forEach(btn => {
@@ -131,7 +139,7 @@
     questionsGrid.appendChild(card);
   });
 
-  // نهاية اللعبة (كل الأسئلة مقفلة)
+  // نهاية اللعبة
   const allDone = computeAllQuestionsLocked(s, data);
   if (allDone) {
     finishCard.style.display = "block";
