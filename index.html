@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لعبة العائلة - دخول</title>
-  <link rel="icon" href="assets/icons/favicon.png" />
-  <link rel="stylesheet" href="css/style.css" />
+  <title>لعبة العائلة - الدخول</title>
+  <link rel="stylesheet" href="css/style.css?v=11" />
 </head>
 <body>
   <div class="app">
@@ -17,76 +16,115 @@
           <div class="brand__sub">نسخة العيد • دخول محمي</div>
         </div>
       </div>
-
-      <div class="topbar__actions">
-        <!-- يظهر فقط إذا المستخدم مسجل دخول -->
-        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button" style="display:none;">تسجيل خروج</button>
-      </div>
+      <div class="topbar__actions"></div>
     </header>
 
     <main class="container">
       <section class="card card--hero">
-        <div class="hero">
-          <!-- (4) شلنا شارة RTL • Mobile • Smooth UI -->
-          <h1 class="hero__title">ابدأ جلسة جديدة</h1>
-          <p class="hero__desc">
-            ادخل كلمة المرور، ثم اكتب أسماء الفريقين.
-            سيتم حفظ الجلسة تلقائيًا.
-          </p>
-        </div>
+        <h1 class="hero__title" id="heroTitle">ابدأ جلسة</h1>
+        <p class="hero__desc" id="heroDesc">اكتب أسماء الفريقين ثم ابدأ.</p>
+
+        <div class="divider"></div>
 
         <div class="grid grid--2">
-          <div class="field">
-            <label class="label" for="password">كلمة المرور</label>
+          <div class="field" id="passwordWrap">
+            <div class="label">كلمة المرور</div>
             <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="off" />
-            <div class="hint">* للحماية البسيطة (Client-side) لغرض العرض/البيع.</div>
-          </div>
-
-          <!-- (2) شلنا رقم التحدي بالكامل -->
-          <div class="field">
-            <label class="label" for="teamA">اسم الفريق الأول</label>
-            <input id="teamA" class="input" type="text" placeholder="مثال: فريق A" maxlength="24" />
+            <div class="hint">حماية بسيطة (Client-side) للعرض/البيع.</div>
           </div>
 
           <div class="field">
-            <label class="label" for="teamB">اسم الفريق الثاني</label>
-            <input id="teamB" class="input" type="text" placeholder="مثال: فريق B" maxlength="24" />
+            <div class="label">اسم الفريق الأول</div>
+            <input id="teamA" class="input" type="text" placeholder="مثال: هزاع" />
           </div>
 
           <div class="field">
-            <label class="label" for="spacer"> </label>
-            <div class="hint" id="spacer"> </div>
+            <div class="label">اسم الفريق الثاني</div>
+            <input id="teamB" class="input" type="text" placeholder="مثال: وعد" />
           </div>
         </div>
 
-        <div class="row row--space">
-          <div class="status" id="statusBox" aria-live="polite"></div>
-          <div class="row">
-            <!-- (3) ترجمة New Game -->
-            <button id="btnNewGame" class="btn btn--ghost" type="button">لعبة جديدة</button>
-            <button id="btnContinue" class="btn btn--primary" type="button">دخول</button>
-          </div>
-        </div>
-      </section>
+        <div class="divider"></div>
 
-      <section class="card">
-        <div class="card__title">معلومة سريعة</div>
-        <div class="muted">
-          • التنقل: دخول → اختيار الجولة/الفئة → قائمة الأسئلة → شاشة اللعب
-          <br/>
-          • كل سؤال = 10 نقاط، وبعد الاستخدام يُقفل ولا يفتح مرة ثانية
-          <br/>
-          • عند انتهاء كل الأسئلة سيتم إعلان الفائز
+        <div class="row row--wrap">
+          <button id="btnEnter" class="btn btn--primary" type="button">دخول</button>
+          <button id="btnLogout" class="btn btn--ghost" type="button" style="display:none;">تسجيل خروج</button>
         </div>
+
+        <div class="status" id="statusBox" aria-live="polite"></div>
       </section>
     </main>
 
     <footer class="footer">
-      <div class="muted">© لعبة العائلة • نسخة GitHub Pages</div>
+      <div class="muted">جاهزين للّعب؟ 😄</div>
     </footer>
   </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/index.js"></script>
+  <script src="js/common.js?v=11"></script>
+  <script>
+    (function(){
+      const s = ensureSession();
+      const params = new URLSearchParams(location.search);
+      const mode = params.get("mode");
+
+      const passwordWrap = document.getElementById("passwordWrap");
+      const passwordInput = document.getElementById("password");
+      const teamA = document.getElementById("teamA");
+      const teamB = document.getElementById("teamB");
+      const btnEnter = document.getElementById("btnEnter");
+      const btnLogout = document.getElementById("btnLogout");
+      const statusBox = document.getElementById("statusBox");
+      const heroTitle = document.getElementById("heroTitle");
+      const heroDesc  = document.getElementById("heroDesc");
+
+      // كلمة المرور الثابتة (غيرها هنا)
+      const DEMO_PASSWORD = "1234";
+
+      // Mode newteams: إذا auth موجود نخفي كلمة المرور
+      const isNewTeams = (mode === "newteams") && s.auth && s.auth.ok;
+
+      if(isNewTeams){
+        heroTitle.textContent = "فريقين جدد";
+        heroDesc.textContent  = "اكتب أسماء الفريقين الجدد. الأسئلة المقفولة تبقى مقفولة والنقاط تبدأ من الصفر.";
+        passwordWrap.style.display = "none";
+        btnLogout.style.display = "inline-flex";
+      }
+
+      // preload names if exist
+      teamA.value = (s.teams?.a || "");
+      teamB.value = (s.teams?.b || "");
+
+      btnLogout.addEventListener("click", ()=> logoutWipeAll());
+
+      btnEnter.addEventListener("click", ()=>{
+        const a = (teamA.value||"").trim();
+        const b = (teamB.value||"").trim();
+
+        if(!a || !b){
+          setStatus(statusBox, "اكتب اسم الفريقين.", "bad");
+          return;
+        }
+
+        // إذا مو newteams لازم نتحقق من كلمة المرور
+        if(!isNewTeams){
+          const pw = (passwordInput.value||"").trim();
+          if(pw !== DEMO_PASSWORD){
+            setStatus(statusBox, "كلمة المرور غير صحيحة.", "bad");
+            return;
+          }
+          s.auth.ok = true;
+        }
+
+        // set teams (and if newteams: scores already zeroed by startNewTeamsKeepLocks)
+        s.teams = {a, b};
+        if(!s.scores) s.scores = {a:0,b:0};
+        saveSession(s);
+
+        // نروح لصفحة الفئات
+        window.location.href = "rounds.html";
+      });
+
+    })();
+  </script>
 </body>
 </html>
