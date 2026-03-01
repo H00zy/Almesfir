@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - اختيار الجولة</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=12" />
 </head>
 <body>
   <div class="app">
@@ -12,7 +12,7 @@
       <div class="brand brand--small">
         <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
         <div class="brand__txt">
-          <div class="brand__title">اختيار الجولة</div>
+          <div class="brand__title">اختيار الفئة</div>
           <div class="brand__sub" id="sessionLine">—</div>
         </div>
       </div>
@@ -33,6 +33,14 @@
           </div>
 
           <div class="scorebar" id="scorebar"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ✅ زر فتح جميع الأسئلة المقفولة -->
+        <div class="row row--space row--wrap">
+          <button id="btnUnlockAll" class="btn btn--ghost btn--sm" type="button">فتح جميع الأسئلة المقفولة</button>
+          <div class="status" id="unlockStatus" aria-live="polite"></div>
         </div>
 
         <div class="divider"></div>
@@ -61,7 +69,7 @@
     </footer>
   </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/rounds.js"></script>
+  <script src="js/common.js?v=12"></script>
+  <script src="js/rounds.js?v=12"></script>
 </body>
 </html>
