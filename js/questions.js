@@ -2,6 +2,9 @@
   if (!requireAuthOrRedirect()) return;
 
   const s = ensureSession();
+  s.selectedChallenge = 1;
+  saveSession(s);
+
   const sessionLine = $("sessionLine");
   const scorebar = $("scorebar");
   const roundTitle = $("roundTitle");
@@ -22,7 +25,7 @@
   if (btnNewGame2) btnNewGame2.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
   if (btnLogout2) btnLogout2.addEventListener("click", () => logoutWipeAll());
 
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"} • تحدي رقم ${s.selectedChallenge || 1}`;
+  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
   renderScorebar(scorebar, s);
 
   if (!s.selectedRoundId) {
@@ -32,15 +35,14 @@
 
   let data;
   try {
-    data = await loadChallengeData(s.selectedChallenge || 1);
+    data = await loadChallengeData(1);
   } catch (e) {
-    questionsGrid.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات التحدي.</div></div>`;
+    questionsGrid.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات اللعبة.</div></div>`;
     return;
   }
 
   const challengeId = String(data.id);
 
-  // find selected round
   let selectedCat = null;
   let selectedRound = null;
 
@@ -61,23 +63,20 @@
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
   roundHint.textContent = selectedRound.hint || "كل سؤال = 10 نقاط. بعد الاستخدام يُقفل.";
 
-  // update round lock if fully locked
   const fullyLocked = computeRoundFullyLocked(s, challengeId, selectedRound);
   setRoundLocked(s, challengeId, selectedRound.id, fullyLocked);
 
-  // render questions
   questionsGrid.innerHTML = "";
   selectedRound.questions.forEach((q, idx) => {
     const locked = isQuestionLocked(s, challengeId, selectedRound.id, q.id);
     const assigned = getAssignedTeam(s, challengeId, selectedRound.id, q.id);
 
-    const card = document.createElement("div");
-    card.className = "qcard";
-
     const assignLabel = assigned
       ? (assigned === "a" ? (s.teams.a || "الفريق 1") : (s.teams.b || "الفريق 2"))
       : "غير معيّن";
 
+    const card = document.createElement("div");
+    card.className = "qcard";
     card.innerHTML = `
       <div class="qcard__top">
         <div>
@@ -102,19 +101,19 @@
       </div>
     `;
 
-    // assignment handlers
     card.querySelectorAll("button[data-assign]").forEach(btn => {
       btn.addEventListener("click", () => {
         const team = btn.getAttribute("data-assign");
         const ns = ensureSession();
+        ns.selectedChallenge = 1;
         setAssignedTeam(ns, challengeId, selectedRound.id, q.id, team);
         window.location.reload();
       });
     });
 
-    // open question
     card.querySelector("button[data-open]").addEventListener("click", () => {
       const ns = ensureSession();
+      ns.selectedChallenge = 1;
       ns.selectedQuestionId = q.id;
       ns.lastUpdatedAt = nowISO();
       saveSession(ns);
@@ -124,7 +123,6 @@
     questionsGrid.appendChild(card);
   });
 
-  // If all questions in whole challenge locked => show finish
   const allDone = computeAllQuestionsLocked(s, data);
   if (allDone) {
     finishCard.style.display = "block";
