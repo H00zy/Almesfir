@@ -56,6 +56,9 @@
 
   $("roundTitle").textContent = `${selectedCat.title} • ${selectedRound.title}`;
 
+  // ✅ بطاقة الفوز (داخل صفحة الأسئلة)
+  injectWinnerCardIfNeeded();
+
   const grid = $("questionsGrid");
   grid.innerHTML = "";
 
@@ -111,25 +114,24 @@
     btnOpen.className = "btn btn--primary btn--sm";
     btnOpen.type = "button";
     btnOpen.textContent = "افتح السؤال";
-    // ✅ الجديد: ما تقدر تفتح بدون تعيين
+    // ✅ ما تقدر تفتح بدون تعيين
     btnOpen.disabled = locked || !assigned;
 
     btnA.addEventListener("click", () => {
       const ns = ensureSession();
       setAssignedTeam(ns, challengeId, selectedRound.id, q.id, "a");
       assignLabel.textContent = `موجّه إلى: ${teamAName}`;
-      btnOpen.disabled = false; // صار معيّن
+      btnOpen.disabled = false;
     });
 
     btnB.addEventListener("click", () => {
       const ns = ensureSession();
       setAssignedTeam(ns, challengeId, selectedRound.id, q.id, "b");
       assignLabel.textContent = `موجّه إلى: ${teamBName}`;
-      btnOpen.disabled = false; // صار معيّن
+      btnOpen.disabled = false;
     });
 
     btnOpen.addEventListener("click", () => {
-      // حماية إضافية
       const ns = ensureSession();
       const a = getAssignedTeam(ns, challengeId, selectedRound.id, q.id);
       if (!a) return;
@@ -154,6 +156,97 @@
     card.appendChild(actions);
 
     grid.appendChild(card);
+  }
+
+  // -------- helpers --------
+  function injectWinnerCardIfNeeded(){
+    const ns = ensureSession();
+    if (!ns.winState || !ns.winState.reached) return;
+
+    const target = getWinTarget();
+    const winnerTeam = ns.winState.team;
+    const winnerName = winnerTeam === "a" ? (ns.teams.a || "الفريق الأول") : (ns.teams.b || "الفريق الثاني");
+
+    // مكان البطاقة: فوق الشبكة
+    const host = document.getElementById("winnerHost") || document.querySelector("main.container") || document.body;
+
+    // إذا موجودة مسبقًا لا نكررها
+    if (document.getElementById("winnerCard")) return;
+
+    const card = document.createElement("section");
+    card.className = "card";
+    card.id = "winnerCard";
+
+    card.innerHTML = `
+      <div class="card__title" style="font-size:20px;">🎉 مبروك! ${escapeHtml(winnerName)} وصل ${target} نقطة 🏆</div>
+      <div class="muted" style="margin-top:6px; line-height:1.8;">
+        تقدرون تكملون اللعب للنهاية، أو تبدأ فرق جديدة على الأسئلة المتبقية (المقفولة تظل مقفولة).
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row row--wrap">
+        <button id="btnWinContinue" class="btn btn--primary" type="button">نكمل باقي الأسئلة</button>
+        <button id="btnWinNewTeams" class="btn btn--ghost" type="button">فريق جديد</button>
+      </div>
+
+      <div id="newTeamsBox" style="display:none; margin-top:14px;">
+        <div class="divider"></div>
+        <div class="card__title">أسماء الفرق الجديدة</div>
+        <div class="muted">النقاط تبدأ من صفر، والأسئلة المقفولة تظل مقفولة.</div>
+
+        <div class="grid grid--2" style="margin-top:12px;">
+          <div class="field">
+            <div class="label">اسم الفريق الأول</div>
+            <input id="newTeamA" class="input" placeholder="مثال: فريق 1" />
+          </div>
+          <div class="field">
+            <div class="label">اسم الفريق الثاني</div>
+            <input id="newTeamB" class="input" placeholder="مثال: فريق 2" />
+          </div>
+        </div>
+
+        <div class="row row--wrap" style="margin-top:12px;">
+          <button id="btnStartNewTeams" class="btn btn--primary" type="button">ابدأ بالفريقين الجديدين</button>
+          <button id="btnCancelNewTeams" class="btn btn--ghost" type="button">إلغاء</button>
+        </div>
+
+        <div class="status" id="winStatus" style="margin-top:10px;"></div>
+      </div>
+    `;
+
+    // نحطه قبل grid لو نقدر
+    const before = document.getElementById("questionsGrid");
+    if (before && before.parentElement) before.parentElement.insertBefore(card, before);
+    else host.prepend(card);
+
+    // handlers
+    document.getElementById("btnWinContinue").addEventListener("click", () => {
+      const x = ensureSession();
+      setWinnerMode(x, "continue");
+      // نكمل بدون ما نمس شيء
+      // نخفي البطاقة بس (اختياري)
+      card.style.display = "none";
+    });
+
+    document.getElementById("btnWinNewTeams").addEventListener("click", () => {
+      document.getElementById("newTeamsBox").style.display = "block";
+    });
+
+    document.getElementById("btnCancelNewTeams").addEventListener("click", () => {
+      document.getElementById("newTeamsBox").style.display = "none";
+    });
+
+    document.getElementById("btnStartNewTeams").addEventListener("click", () => {
+      const a = (document.getElementById("newTeamA").value || "").trim();
+      const b = (document.getElementById("newTeamB").value || "").trim();
+      if (!a || !b) {
+        setStatus(document.getElementById("winStatus"), "اكتب اسمين للفرق الجديدة.", "bad");
+        return;
+      }
+      startNewTeamsKeepLocks(a, b);
+      window.location.href = "rounds.html";
+    });
   }
 
 })();
