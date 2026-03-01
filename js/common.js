@@ -10,6 +10,9 @@ const STORAGE_KEY = "EID_FAMILY_GAME_SESSION_V1";
 // Default (change in README "How to customize")
 const DEFAULT_PASSWORD = "EID2026"; // demo password
 
+// ✅ هدف الفوز
+const WIN_TARGET = 50;
+
 function nowISO() {
   return new Date().toISOString();
 }
@@ -46,14 +49,21 @@ function ensureSession() {
       selectedCategoryId: null,
       selectedRoundId: null,
       selectedQuestionId: null,
+
       // Locks and per-question state
       locks: {
         // [challengeId]: { [roundId]: { [questionId]: true } }
       },
+
       // assignment: [challengeId]: { [roundId]: { [questionId]: "a"|"b" } }
       assignment: {},
+
       // roundLocks: [challengeId]: { [roundId]: true }
       roundLocks: {},
+
+      // ✅ win state (to avoid opening winner many times)
+      winState: null,
+
       lastUpdatedAt: nowISO()
     };
     saveSession(s);
@@ -169,6 +179,39 @@ function isRoundLocked(session, challengeId, roundId) {
   return !!(session.roundLocks[c] && session.roundLocks[c][roundId]);
 }
 
+/* ✅ WIN helpers */
+function getWinTarget(){ return WIN_TARGET; }
+
+function hasWinner(session){
+  return !!(session.winState && session.winState.reached === true);
+}
+
+function markWinner(session, team){
+  session.winState = {
+    reached: true,
+    team,                 // "a" or "b"
+    reachedAt: nowISO(),
+    openedWinnerPage: false, // set true once opened
+    mode: null            // "continue" | "newTeams" (optional)
+  };
+  session.lastUpdatedAt = nowISO();
+  saveSession(session);
+  return session.winState;
+}
+
+function setWinnerMode(session, mode){
+  session.winState = session.winState || { reached:false };
+  session.winState.mode = mode;
+  session.lastUpdatedAt = nowISO();
+  saveSession(session);
+}
+
+function clearWinState(session){
+  session.winState = null;
+  session.lastUpdatedAt = nowISO();
+  saveSession(session);
+}
+
 /* Game resets */
 function resetGameKeepNames(keepNames = true) {
   const s = ensureSession();
@@ -185,9 +228,38 @@ function resetGameKeepNames(keepNames = true) {
   newS.locks = {};
   newS.assignment = {};
   newS.roundLocks = {};
+  newS.winState = null; // ✅
   newS.lastUpdatedAt = nowISO();
   saveSession(newS);
   return newS;
+}
+
+/* ✅ فرق جديدة مع إبقاء الأقفال */
+function startNewTeamsKeepLocks(teamA, teamB) {
+  const s = ensureSession();
+  const authed = s.authed;
+
+  s.authed = authed;
+  s.teams = { a: (teamA || "").trim(), b: (teamB || "").trim() };
+  s.scores = { a: 0, b: 0 };
+
+  // نبدأ على المتبقي فقط:
+  s.selectedCategoryId = null;
+  s.selectedRoundId = null;
+  s.selectedQuestionId = null;
+
+  // ✅ نبقي الأقفال (locks) كما هي
+  // ✅ ونصفّر التعيينات حتى لا تختلط أسماء الفرق الجديدة
+  s.assignment = {};
+  // ✅ ونعيد احتساب قفل الجولات لاحقًا داخل rounds.js
+  s.roundLocks = {};
+
+  // ✅ نلغي حالة الفوز السابقة (فريق جديد)
+  s.winState = null;
+
+  s.lastUpdatedAt = nowISO();
+  saveSession(s);
+  return s;
 }
 
 function logoutWipeAll() {
