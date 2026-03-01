@@ -20,7 +20,7 @@
   const btnNewGame = $("btnNewGame");
 
   btnLogout.addEventListener("click", () => logoutWipeAll());
-  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
+  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
 
   sessionLine.textContent = `${teamAName} ضد ${teamBName}`;
   renderScorebar(scorebar, s);
@@ -63,9 +63,9 @@
 
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
 
-  // (2) إزالة ID بالكامل: فقط القيمة
+  // إزالة ID: نعرض فقط القيمة
   const points = (data.pointsPerQuestion || 10);
-  questionMeta.textContent = `القيمة: ${toArabicDigits(String(points))} نقاط`;
+  questionMeta.textContent = `القيمة: ${points} نقاط`;
 
   const alreadyLocked = isQuestionLocked(s, challengeId, selectedRound.id, selectedQ.id);
   if (alreadyLocked) {
@@ -76,7 +76,7 @@
 
   questionText.textContent = selectedQ.text || "—";
 
-  // (4) أسماء الفرق بدل الفريق 1/2
+  // أزرار تعيين الفريق بأسماء الفرق
   const btnAssignA = $("btnAssignA");
   const btnAssignB = $("btnAssignB");
   const btnSwitch = $("btnSwitch");
@@ -134,6 +134,7 @@
       setStatus(statusBox, "لازم تعيّن الفريق قبل منح النقاط.", "bad");
       return;
     }
+
     ns.scores[assigned] = (ns.scores[assigned] || 0) + points;
     saveSession(ns);
 
@@ -143,7 +144,7 @@
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
     renderScorebar(scorebar, ns);
-    setStatus(statusBox, `تم منح ${toArabicDigits(String(points))} نقاط وقفل السؤال ✅`, "ok");
+    setStatus(statusBox, `تم منح ${points} نقاط وقفل السؤال ✅`, "ok");
     window.setTimeout(() => window.location.href = "questions.html", 350);
   });
 
@@ -160,8 +161,12 @@
 
   updateAssignedPill();
 
-  // ---- Timer (3) with Arabic digits ----
-  let total = 60;
+  // -------------------------
+  // Timer (default 30 seconds)
+  // -------------------------
+  const DEFAULT_SECONDS = 30;
+
+  let total = DEFAULT_SECONDS;
   let running = false;
   let t = null;
 
@@ -173,7 +178,7 @@
   const btnMinus10 = $("btnMinus10");
 
   function renderTimer() {
-    timerText.textContent = toArabicDigits(formatMMSS(total));
+    timerText.textContent = formatMMSS(total);
   }
   renderTimer();
 
@@ -211,7 +216,7 @@
 
   btnResetTimer.addEventListener("click", () => {
     stopTimer();
-    total = 60;
+    total = DEFAULT_SECONDS;
     renderTimer();
     timerSub.textContent = "جاهز";
   });
