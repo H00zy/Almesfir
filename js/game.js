@@ -1,15 +1,12 @@
 (async function () {
   if (!requireAuthOrRedirect()) return;
 
-  const WIN_SCORE = 50;
-  const DEFAULT_SECONDS = 30;
-
   const s = ensureSession();
   s.selectedChallenge = 1;
   saveSession(s);
 
-  let teamAName = (s.teams && s.teams.a && s.teams.a.trim()) ? s.teams.a.trim() : "الفريق الأول";
-  let teamBName = (s.teams && s.teams.b && s.teams.b.trim()) ? s.teams.b.trim() : "الفريق الثاني";
+  const teamAName = (s.teams && s.teams.a && s.teams.a.trim()) ? s.teams.a.trim() : "الفريق الأول";
+  const teamBName = (s.teams && s.teams.b && s.teams.b.trim()) ? s.teams.b.trim() : "الفريق الثاني";
 
   const sessionLine = $("sessionLine");
   const scorebar = $("scorebar");
@@ -22,25 +19,11 @@
   const btnLogout = $("btnLogout");
   const btnNewGame = $("btnNewGame");
 
-  const winnerPanel = $("winnerPanel");
-  const winnerTitle = $("winnerTitle");
-  const winnerDesc = $("winnerDesc");
-  const btnContinuePlay = $("btnContinuePlay");
-  const btnStartNewTeams = $("btnStartNewTeams");
-  const newTeamA = $("newTeamA");
-  const newTeamB = $("newTeamB");
-
   btnLogout.addEventListener("click", () => logoutWipeAll());
   btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
 
-  function refreshHeaderAndScores() {
-    const ns = ensureSession();
-    teamAName = (ns.teams && ns.teams.a && ns.teams.a.trim()) ? ns.teams.a.trim() : "الفريق الأول";
-    teamBName = (ns.teams && ns.teams.b && ns.teams.b.trim()) ? ns.teams.b.trim() : "الفريق الثاني";
-    sessionLine.textContent = `${teamAName} ضد ${teamBName}`;
-    renderScorebar(scorebar, ns);
-  }
-  refreshHeaderAndScores();
+  sessionLine.textContent = `${teamAName} ضد ${teamBName}`;
+  renderScorebar(scorebar, s);
 
   if (!s.selectedRoundId || !s.selectedQuestionId) {
     window.location.href = "questions.html";
@@ -86,8 +69,8 @@
   const alreadyLocked = isQuestionLocked(s, challengeId, selectedRound.id, selectedQ.id);
   if (alreadyLocked) {
     lockedNotice.style.display = "block";
-    const qboxTop = document.getElementById("qboxTop");
-    if (qboxTop) qboxTop.style.display = "none";
+    const qbox = document.getElementById("qbox") || document.getElementById("qboxTop");
+    if (qbox) qbox.style.display = "none";
     const timerCard = document.getElementById("timerCard");
     if (timerCard) timerCard.style.display = "none";
     return;
@@ -102,6 +85,9 @@
   const btnAward = $("btnAward");
   const btnNoPoints = $("btnNoPoints");
   const statusBox = $("statusBox");
+
+  btnAssignA.textContent = `تعيين لـ ${teamAName}`;
+  btnAssignB.textContent = `تعيين لـ ${teamBName}`;
 
   function getAssignedNow() {
     const ns = ensureSession();
@@ -119,14 +105,9 @@
     return assigned;
   }
 
-  function updateAssignButtonsText() {
-    btnAssignA.textContent = `تعيين لـ ${teamAName}`;
-    btnAssignB.textContent = `تعيين لـ ${teamBName}`;
-  }
-  updateAssignButtonsText();
-
   btnAssignA.addEventListener("click", () => {
     const ns = ensureSession();
+    ns.selectedChallenge = 1;
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, "a");
     setStatus(statusBox, `تم تعيين السؤال لـ ${teamAName}.`, "ok");
     updateAssignedPill();
@@ -134,6 +115,7 @@
 
   btnAssignB.addEventListener("click", () => {
     const ns = ensureSession();
+    ns.selectedChallenge = 1;
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, "b");
     setStatus(statusBox, `تم تعيين السؤال لـ ${teamBName}.`, "ok");
     updateAssignedPill();
@@ -151,56 +133,6 @@
     updateAssignedPill();
   });
 
-  // =========================
-  // Winner flow
-  // =========================
-  function showWinner(teamKey) {
-    const name = teamKey === "a" ? teamAName : teamBName;
-    winnerTitle.textContent = `🎉 فاز ${name}!`;
-    winnerDesc.textContent = `وصل إلى ${WIN_SCORE} نقطة أولاً.`;
-
-    // يفضل يعبّي الأسماء الحالية كبداية
-    newTeamA.value = "";
-    newTeamB.value = "";
-
-    winnerPanel.style.display = "block";
-    winnerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function hideWinner() {
-    winnerPanel.style.display = "none";
-  }
-
-  btnContinuePlay.addEventListener("click", () => {
-    hideWinner();
-    window.location.href = "questions.html";
-  });
-
-  btnStartNewTeams.addEventListener("click", () => {
-    const a = (newTeamA.value || "").trim();
-    const b = (newTeamB.value || "").trim();
-
-    const ns = ensureSession();
-    // ✅ تصفير النقاط فقط + تغيير أسماء الفرق
-    ns.scores = { a: 0, b: 0 };
-    ns.teams = {
-      a: a || "الفريق الأول",
-      b: b || "الفريق الثاني"
-    };
-    saveSession(ns);
-
-    // تحديث العرض
-    refreshHeaderAndScores();
-    updateAssignButtonsText();
-    updateAssignedPill();
-
-    hideWinner();
-    window.location.href = "rounds.html";
-  });
-
-  // =========================
-  // Award/Lock
-  // =========================
   btnAward.addEventListener("click", () => {
     const ns = ensureSession();
     const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
@@ -219,15 +151,7 @@
 
     renderScorebar(scorebar, ns);
     setStatus(statusBox, `تم منح ${points} نقاط وقفل السؤال ✅`, "ok");
-
-    // ✅ لو وصل 50: اسأل (نكمل / فريق جديد)
-    if ((ns.scores[assigned] || 0) >= WIN_SCORE) {
-      stopTimer("paused"); // وقف المؤقت
-      showWinner(assigned);
-      return;
-    }
-
-    window.setTimeout(() => window.location.href = "questions.html", 300);
+    window.setTimeout(() => window.location.href = "questions.html", 350);
   });
 
   btnNoPoints.addEventListener("click", () => {
@@ -238,19 +162,22 @@
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
     setStatus(statusBox, "تم قفل السؤال بدون نقاط ✅", "ok");
-    window.setTimeout(() => window.location.href = "questions.html", 300);
+    window.setTimeout(() => window.location.href = "questions.html", 350);
   });
 
   updateAssignedPill();
 
-  // =========================
-  // Timer (لا يعمل بدون تعيين فريق)
-  // =========================
+  // -------------------------
+  // Timer (default 30 seconds)
+  // ✅ الجديد: ما يشتغل إلا إذا الفريق معيّن
+  // -------------------------
+  const DEFAULT_SECONDS = 30;
+
   let total = DEFAULT_SECONDS;
   let running = false;
   let t = null;
 
-  const timerCard = document.getElementById("timerCard");
+  const timerCard = document.getElementById("timerCard"); // موجود في تصميمك الأخير
   const timerText = $("timerText");
   const timerSub = $("timerSub");
   const btnStartPause = $("btnStartPause");
@@ -258,7 +185,9 @@
   const btnPlus10 = $("btnPlus10");
   const btnMinus10 = $("btnMinus10");
 
-  function renderTimer() { timerText.textContent = formatMMSS(total); }
+  function renderTimer() {
+    timerText.textContent = formatMMSS(total);
+  }
   renderTimer();
 
   function setTimerStateLabel(state) {
@@ -288,6 +217,7 @@
 
   function tick() {
     total -= 1;
+
     if (timerCard && total <= 5 && total > 0) timerCard.classList.add("timer--urgent");
 
     if (total <= 0) {
@@ -304,14 +234,15 @@
 
       btnStartPause.textContent = "▶ ابدأ";
       setTimerStateLabel("done");
-      setStatus(statusBox, "انتهى الوقت ⏱️", "");
+      setStatus(statusBox, "انتهى الوقت ⏱️ تقدر تبدّل الفريق أو تمنح النقاط.", "");
       return;
     }
+
     renderTimer();
   }
 
   btnStartPause.addEventListener("click", () => {
-    // ✅ لا تشغيل بدون تعيين فريق
+    // ✅ شرط: لا تشغيل بدون تعيين فريق
     const assigned = getAssignedNow();
     if (!assigned) {
       setStatus(statusBox, "عيّن الفريق أولاً ثم شغّل المؤقت.", "bad");
