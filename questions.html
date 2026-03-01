@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - الأسئلة</title>
-  <link rel="stylesheet" href="css/style.css?v=10" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div class="app">
@@ -12,54 +12,66 @@
       <div class="brand brand--small">
         <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
         <div class="brand__txt">
-          <div class="brand__title" id="pageTitle">قائمة الأسئلة</div>
+          <div class="brand__title">قائمة الأسئلة</div>
           <div class="brand__sub" id="sessionLine">—</div>
         </div>
       </div>
 
       <div class="topbar__actions">
-        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">لعبة جديدة</button>
-        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">تسجيل خروج</button>
+        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">New Game</button>
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">Logout</button>
       </div>
     </header>
 
     <main class="container">
-
-      <section class="card">
-        <div class="row row--space row--wrap">
-          <div class="scorebar" id="scorebar"></div>
-          <div class="row row--wrap">
-            <a class="btn btn--ghost btn--sm" href="rounds.html">رجوع للفئات</a>
-          </div>
-        </div>
-      </section>
-
       <section class="card">
         <div class="row row--space row--wrap">
           <div>
             <div class="card__title" id="roundTitle">—</div>
-            <div class="muted">اختر الفريق لكل سؤال، ثم افتح السؤال للعب.</div>
+            <div class="muted" id="roundHint">كل سؤال = 10 نقاط. بعد الاستخدام يُقفل.</div>
           </div>
-          <div class="pill">القيمة: <span id="pointsVal">10</span> نقاط</div>
+
+          <div class="scorebar" id="scorebar"></div>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="grid grid--2" id="questionsGrid"></div>
-
-        <div class="divider"></div>
-
-        <div class="muted">ملاحظة: بعد استخدام السؤال يتم قفله ولا يمكن فتحه مرة ثانية.</div>
       </section>
 
+      <section class="card">
+        <div class="row row--space row--wrap">
+          <div class="row row--wrap">
+            <span class="pill pill--soft">الخطوة 1: اختر الفريق للسؤال</span>
+            <span class="pill pill--soft">الخطوة 2: افتح السؤال</span>
+            <span class="pill pill--soft">الخطوة 3: من شاشة اللعب امنح النقاط/بدّل الفريق</span>
+          </div>
+          <div class="row">
+            <a class="btn btn--ghost btn--sm" href="rounds.html">تغيير الجولة</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="questionsGrid" class="grid grid--2">
+        <!-- cards generated -->
+      </section>
+
+      <section class="card" id="finishCard" style="display:none;">
+        <div class="card__title">انتهت جميع الأسئلة 🎉</div>
+        <div class="muted" id="winnerLine">—</div>
+        <div class="divider"></div>
+        <div class="row row--space row--wrap">
+          <div class="muted">تقدر تبدأ لعبة جديدة أو تسوي Logout.</div>
+          <div class="row">
+            <button id="btnNewGame2" class="btn btn--primary" type="button">New Game</button>
+            <button id="btnLogout2" class="btn btn--ghost" type="button">Logout</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="footer">
-      <div class="muted">تصميم عربي • تجربة عائلية</div>
+      <div class="muted">لا توجد Popups — كل شيء داخل بطاقات</div>
     </footer>
   </div>
 
-  <script src="js/common.js?v=10"></script>
-  <script src="js/questions.js?v=10"></script>
+  <script src="js/common.js"></script>
+  <script src="js/questions.js"></script>
 </body>
 </html>
