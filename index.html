@@ -3,34 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لعبة العائلة - الدخول</title>
-  <link rel="stylesheet" href="css/style.css?v=11" />
+  <title>لعبة العائلة - دخول</title>
+  <link rel="stylesheet" href="css/style.css?v=12" />
 </head>
 <body>
   <div class="app">
     <header class="topbar">
-      <div class="brand">
+      <div class="brand brand--small">
         <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
         <div class="brand__txt">
           <div class="brand__title">لعبة العائلة</div>
           <div class="brand__sub">نسخة العيد • دخول محمي</div>
         </div>
       </div>
-      <div class="topbar__actions"></div>
     </header>
 
     <main class="container">
+
       <section class="card card--hero">
-        <h1 class="hero__title" id="heroTitle">ابدأ جلسة</h1>
-        <p class="hero__desc" id="heroDesc">اكتب أسماء الفريقين ثم ابدأ.</p>
+        <h1 class="hero__title">ابدأ جلسة جديدة</h1>
+        <p class="hero__desc">أدخل كلمة المرور وأسماء الفريقين للمتابعة.</p>
+      </section>
 
-        <div class="divider"></div>
-
-        <div class="grid grid--2">
-          <div class="field" id="passwordWrap">
+      <section class="card">
+        <form id="loginForm" class="grid grid--2" autocomplete="off">
+          <div class="field" style="grid-column: 1 / -1;">
             <div class="label">كلمة المرور</div>
-            <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="off" />
-            <div class="hint">حماية بسيطة (Client-side) للعرض/البيع.</div>
+            <input id="password" class="input" type="password" placeholder="••••••••" required />
+            <div class="hint">* حماية بسيطة للعرض/البيع (Client-side).</div>
           </div>
 
           <div class="field">
@@ -42,89 +42,30 @@
             <div class="label">اسم الفريق الثاني</div>
             <input id="teamB" class="input" type="text" placeholder="مثال: وعد" />
           </div>
-        </div>
 
-        <div class="divider"></div>
-
-        <div class="row row--wrap">
-          <button id="btnEnter" class="btn btn--primary" type="button">دخول</button>
-          <button id="btnLogout" class="btn btn--ghost" type="button" style="display:none;">تسجيل خروج</button>
-        </div>
-
-        <div class="status" id="statusBox" aria-live="polite"></div>
+          <div class="row row--wrap" style="grid-column: 1 / -1;">
+            <button class="btn btn--primary" type="submit">دخول</button>
+            <button id="btnClearAll" class="btn btn--ghost" type="button">مسح كل البيانات</button>
+            <span id="status" class="status" aria-live="polite"></span>
+          </div>
+        </form>
       </section>
+
+      <section class="card card--inner">
+        <div class="card__title">معلومة سريعة</div>
+        <div class="muted">
+          كل سؤال قيمته 10 نقاط. أول فريق يصل 50 نقطة يُعتبر فائزاً (مع خيار إكمال اللعب أو بدء فريقين جدد على الأسئلة المتبقية).
+        </div>
+      </section>
+
     </main>
 
     <footer class="footer">
-      <div class="muted">جاهزين للّعب؟ 😄</div>
+      <div class="muted">واجهة عربية • RTL • بدون أطر خارجية</div>
     </footer>
   </div>
 
-  <script src="js/common.js?v=11"></script>
-  <script>
-    (function(){
-      const s = ensureSession();
-      const params = new URLSearchParams(location.search);
-      const mode = params.get("mode");
-
-      const passwordWrap = document.getElementById("passwordWrap");
-      const passwordInput = document.getElementById("password");
-      const teamA = document.getElementById("teamA");
-      const teamB = document.getElementById("teamB");
-      const btnEnter = document.getElementById("btnEnter");
-      const btnLogout = document.getElementById("btnLogout");
-      const statusBox = document.getElementById("statusBox");
-      const heroTitle = document.getElementById("heroTitle");
-      const heroDesc  = document.getElementById("heroDesc");
-
-      // كلمة المرور الثابتة (غيرها هنا)
-      const DEMO_PASSWORD = "1234";
-
-      // Mode newteams: إذا auth موجود نخفي كلمة المرور
-      const isNewTeams = (mode === "newteams") && s.auth && s.auth.ok;
-
-      if(isNewTeams){
-        heroTitle.textContent = "فريقين جدد";
-        heroDesc.textContent  = "اكتب أسماء الفريقين الجدد. الأسئلة المقفولة تبقى مقفولة والنقاط تبدأ من الصفر.";
-        passwordWrap.style.display = "none";
-        btnLogout.style.display = "inline-flex";
-      }
-
-      // preload names if exist
-      teamA.value = (s.teams?.a || "");
-      teamB.value = (s.teams?.b || "");
-
-      btnLogout.addEventListener("click", ()=> logoutWipeAll());
-
-      btnEnter.addEventListener("click", ()=>{
-        const a = (teamA.value||"").trim();
-        const b = (teamB.value||"").trim();
-
-        if(!a || !b){
-          setStatus(statusBox, "اكتب اسم الفريقين.", "bad");
-          return;
-        }
-
-        // إذا مو newteams لازم نتحقق من كلمة المرور
-        if(!isNewTeams){
-          const pw = (passwordInput.value||"").trim();
-          if(pw !== DEMO_PASSWORD){
-            setStatus(statusBox, "كلمة المرور غير صحيحة.", "bad");
-            return;
-          }
-          s.auth.ok = true;
-        }
-
-        // set teams (and if newteams: scores already zeroed by startNewTeamsKeepLocks)
-        s.teams = {a, b};
-        if(!s.scores) s.scores = {a:0,b:0};
-        saveSession(s);
-
-        // نروح لصفحة الفئات
-        window.location.href = "rounds.html";
-      });
-
-    })();
-  </script>
+  <script src="js/common.js?v=12"></script>
+  <script src="js/index.js?v=12"></script>
 </body>
 </html>
