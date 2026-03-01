@@ -12,22 +12,25 @@
 
   btnLogout.addEventListener("click", () => logoutWipeAll());
   btnNewGame.addEventListener("click", () => {
-    const ns = resetGameKeepNames(true);
+    resetGameKeepNames(true);
     window.location.reload();
   });
 
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"} • تحدي رقم ${s.selectedChallenge || 1}`;
+  // تحدي واحد فقط
+  s.selectedChallenge = 1;
+  saveSession(s);
+
+  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
   renderScorebar(scorebar, s);
 
   let data;
   try {
-    data = await loadChallengeData(s.selectedChallenge || 1);
+    data = await loadChallengeData(1);
   } catch (e) {
-    content.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات التحدي.</div></div>`;
+    content.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات اللعبة (data/challenges/1.json).</div></div>`;
     return;
   }
 
-  // Render categories
   content.innerHTML = "";
   const challengeId = String(data.id);
 
@@ -68,6 +71,7 @@
     const roundsWrap = catTile.querySelector(`#rounds-${cat.id}`);
     cat.rounds.forEach(r => {
       const fullyLocked = isRoundLocked(s, challengeId, r.id) || computeRoundFullyLocked(s, challengeId, r);
+
       const btn = document.createElement("button");
       btn.className = `btn ${fullyLocked ? "btn--ghost" : "btn--soft"}`;
       btn.type = "button";
@@ -76,6 +80,7 @@
 
       btn.addEventListener("click", () => {
         const ns = ensureSession();
+        ns.selectedChallenge = 1;
         ns.selectedCategoryId = cat.id;
         ns.selectedRoundId = r.id;
         ns.lastUpdatedAt = nowISO();
