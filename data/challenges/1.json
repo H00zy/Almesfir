@@ -36,7 +36,7 @@
     {
       "id": "parents",
       "title": "الأمهات والآباء",
-      "subtitle": "Rounds لكل فرد",
+      "subtitle": "جولات لكل فرد",
       "rounds": [
         {
           "id": "ahmed",
@@ -93,7 +93,7 @@
     {
       "id": "grandkids",
       "title": "الأحفاد",
-      "subtitle": "مجموعات العائلة",
+      "subtitle": "أسئلة طريفة عن الأحفاد والحفيدات",
       "rounds": [
         {
           "id": "almarie",
