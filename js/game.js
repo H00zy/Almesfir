@@ -69,14 +69,16 @@
   const alreadyLocked = isQuestionLocked(s, challengeId, selectedRound.id, selectedQ.id);
   if (alreadyLocked) {
     lockedNotice.style.display = "block";
-    $("qboxTop").style.display = "none";
-    $("timerCard").style.display = "none";
+    const qbox = document.getElementById("qbox") || document.getElementById("qboxTop");
+    if (qbox) qbox.style.display = "none";
+    const timerCard = document.getElementById("timerCard");
+    if (timerCard) timerCard.style.display = "none";
     return;
   }
 
   questionText.textContent = selectedQ.text || "—";
 
-  // تعيين الفريق بأسماء الفرق
+  // تعيين الفريق
   const btnAssignA = $("btnAssignA");
   const btnAssignB = $("btnAssignB");
   const btnSwitch = $("btnSwitch");
@@ -87,9 +89,13 @@
   btnAssignA.textContent = `تعيين لـ ${teamAName}`;
   btnAssignB.textContent = `تعيين لـ ${teamBName}`;
 
-  function updateAssignedPill() {
+  function getAssignedNow() {
     const ns = ensureSession();
-    const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
+    return getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
+  }
+
+  function updateAssignedPill() {
+    const assigned = getAssignedNow();
     if (!assigned) {
       assignedPill.textContent = "غير معيّن";
       return null;
@@ -119,7 +125,7 @@
     const ns = ensureSession();
     const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
     if (!assigned) {
-      setStatus(statusBox, "عيّن الفريق أولاً ثم بدّل.", "bad");
+      setStatus(statusBox, "عيّن الفريق أولاً.", "bad");
       return;
     }
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, otherTeam(assigned));
@@ -163,6 +169,7 @@
 
   // -------------------------
   // Timer (default 30 seconds)
+  // ✅ الجديد: ما يشتغل إلا إذا الفريق معيّن
   // -------------------------
   const DEFAULT_SECONDS = 30;
 
@@ -170,7 +177,7 @@
   let running = false;
   let t = null;
 
-  const timerCard = $("timerCard");
+  const timerCard = document.getElementById("timerCard"); // موجود في تصميمك الأخير
   const timerText = $("timerText");
   const timerSub = $("timerSub");
   const btnStartPause = $("btnStartPause");
@@ -191,6 +198,7 @@
   }
 
   function clearFX() {
+    if (!timerCard) return;
     timerCard.classList.remove("timer--urgent", "timer--done", "timer--shake");
   }
 
@@ -204,14 +212,13 @@
     stopInterval();
     btnStartPause.textContent = "▶ ابدأ";
     setTimerStateLabel(state);
-    if (state !== "running") timerCard.classList.remove("timer--urgent");
+    if (timerCard) timerCard.classList.remove("timer--urgent");
   }
 
   function tick() {
     total -= 1;
 
-    // آخر 5 ثواني: وميض خفيف
-    if (total <= 5 && total > 0) timerCard.classList.add("timer--urgent");
+    if (timerCard && total <= 5 && total > 0) timerCard.classList.add("timer--urgent");
 
     if (total <= 0) {
       total = 0;
@@ -219,10 +226,11 @@
       running = false;
       stopInterval();
 
-      // تأثير نهاية الوقت داخل المؤقت فقط
-      timerCard.classList.remove("timer--urgent");
-      timerCard.classList.add("timer--done", "timer--shake");
-      window.setTimeout(() => timerCard.classList.remove("timer--shake"), 520);
+      if (timerCard) {
+        timerCard.classList.remove("timer--urgent");
+        timerCard.classList.add("timer--done", "timer--shake");
+        window.setTimeout(() => timerCard.classList.remove("timer--shake"), 520);
+      }
 
       btnStartPause.textContent = "▶ ابدأ";
       setTimerStateLabel("done");
@@ -234,8 +242,14 @@
   }
 
   btnStartPause.addEventListener("click", () => {
-    // لو كان انتهى الوقت ورجعت تضغط: نشيل تأثير النهاية
-    timerCard.classList.remove("timer--done");
+    // ✅ شرط: لا تشغيل بدون تعيين فريق
+    const assigned = getAssignedNow();
+    if (!assigned) {
+      setStatus(statusBox, "عيّن الفريق أولاً ثم شغّل المؤقت.", "bad");
+      return;
+    }
+
+    if (timerCard) timerCard.classList.remove("timer--done");
 
     if (!running) {
       running = true;
