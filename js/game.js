@@ -133,35 +133,16 @@
     updateAssignedPill();
   });
 
-  // ✅ فتح صفحة الفوز مرة واحدة
-  function maybeOpenWinnerIfReached(ns) {
+  // ✅ تحقق الفوز عند 50 (بدون فتح تبويب)
+  function maybeMarkWinner(ns) {
     const target = getWinTarget();
     const a = ns.scores.a || 0;
     const b = ns.scores.b || 0;
 
-    if (hasWinner(ns)) return; // already reached and recorded
+    if (hasWinner(ns)) return;
 
-    if (a >= target) {
-      markWinner(ns, "a");
-    } else if (b >= target) {
-      markWinner(ns, "b");
-    } else {
-      return;
-    }
-
-    // افتح winner.html في تبويب جديد (مرة واحدة)
-    const again = ensureSession();
-    if (again.winState && again.winState.openedWinnerPage) return;
-
-    again.winState.openedWinnerPage = true;
-    saveSession(again);
-
-    try {
-      window.open("winner.html", "_blank");
-    } catch (e) {
-      // إذا المتصفح منع فتح تبويب، نخلي اللاعب يروح يدويًا
-      setStatus(statusBox, "الفائز وصل 50! افتح صفحة winner.html للاحتفال 🎉", "ok");
-    }
+    if (a >= target) markWinner(ns, "a");
+    else if (b >= target) markWinner(ns, "b");
   }
 
   btnAward.addEventListener("click", () => {
@@ -180,11 +161,10 @@
     const fullyLocked = computeRoundFullyLocked(ns, challengeId, selectedRound);
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
+    // ✅ سجل الفوز إذا وصل 50
+    maybeMarkWinner(ns);
+
     renderScorebar(scorebar, ns);
-
-    // ✅ تحقق الفوز
-    maybeOpenWinnerIfReached(ns);
-
     setStatus(statusBox, `تم منح ${points} نقاط وقفل السؤال ✅`, "ok");
     window.setTimeout(() => window.location.href = "questions.html", 350);
   });
@@ -212,7 +192,7 @@
   let running = false;
   let t = null;
 
-  const timerCard = document.getElementById("timerCard");
+  const timerCard = document.getElementById("timerCard"); // موجود في تصميمك الأخير
   const timerText = $("timerText");
   const timerSub = $("timerSub");
   const btnStartPause = $("btnStartPause");
@@ -269,6 +249,7 @@
   }
 
   btnStartPause.addEventListener("click", () => {
+    // ✅ شرط: لا تشغيل بدون تعيين فريق
     const assigned = getAssignedNow();
     if (!assigned) {
       setStatus(statusBox, "عيّن الفريق أولاً ثم شغّل المؤقت.", "bad");
