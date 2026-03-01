@@ -35,3 +35,114 @@ When ALL questions in the challenge are locked, the game shows the winner.
 ---
 
 ## Repo structure
+eid-family-game/
+├─ index.html
+├─ rounds.html
+├─ questions.html
+├─ game.html
+├─ assets/
+│ ├─ images/logo.png
+│ └─ icons/favicon.png
+├─ css/style.css
+├─ js/
+│ ├─ common.js
+│ ├─ index.js
+│ ├─ rounds.js
+│ ├─ questions.js
+│ └─ game.js
+└─ data/challenges/
+├─ 1.json
+├─ 2.json
+├─ 3.json
+├─ 4.json
+├─ 5.json
+├─ 6.json
+└─ 7.json
+
+
+---
+
+## Setup (Local)
+Because we load JSON with `fetch()`, run via a local server (not by opening the file directly).
+
+### Option A: VS Code Live Server
+1. Install "Live Server"
+2. Right click `index.html` → "Open with Live Server"
+
+### Option B: Python simple server
+From the repo root:
+- Python 3:python -m http.server 5500
+
+Then open:
+- http://localhost:5500
+
+---
+
+## Deploy to GitHub Pages
+1. Create a GitHub repository (e.g. `eid-family-game`)
+2. Upload all files to the repo root
+3. Go to:
+ - **Settings → Pages**
+4. Under **Build and deployment**:
+ - Source: **Deploy from a branch**
+ - Branch: **main**
+ - Folder: **/(root)**
+5. Save
+6. GitHub will give you your site URL
+
+> Tip: Always keep `index.html` in the root for GitHub Pages.
+
+---
+
+## Data format (Adding new questions / challenges)
+Each challenge is a JSON file under:
+`data/challenges/<challengeNo>.json`
+
+Schema:
+```json
+{
+"id": 1,
+"title": "Challenge title",
+"description": "Optional",
+"pointsPerQuestion": 10,
+"categories": [
+  {
+    "id": "category_id",
+    "title": "Category title",
+    "subtitle": "Optional",
+    "rounds": [
+      {
+        "id": "round_id",
+        "title": "Round title",
+        "hint": "Optional hint",
+        "questions": [
+          { "id": "q1", "text": "Question text" },
+          { "id": "q2", "text": "Question text" },
+          { "id": "q3", "text": "Question text" },
+          { "id": "q4", "text": "Question text" }
+        ]
+      }
+    ]
+  }
+]
+}
+
+Important rules:
+
+Each round must have exactly 4 questions (q1..q4 recommended)
+Round IDs must be unique within the challenge
+Question IDs must be unique within each round
+
+How state is stored
+
+The game uses localStorage key:
+EID_FAMILY_GAME_SESSION_V1
+
+Stored:
+authed
+team names
+selected challenge / category / round / question
+scores
+per-question locks: once locked cannot open again
+per-question assignment (team A/B)
+per-round locked status
