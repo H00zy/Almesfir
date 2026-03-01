@@ -1,234 +1,266 @@
 /* =========================
-   common.js
-   - localStorage session
-   - auth gate
-   - helpers
+   common.js - Session + Helpers (RTL Arabic Game)
    ========================= */
 
-const STORAGE_KEY = "EID_FAMILY_GAME_SESSION_V1";
+const STORAGE_KEY = "eid_family_game_v1";
+const WIN_SCORE = 50;
 
-// Default (change in README "How to customize")
-const DEFAULT_PASSWORD = "EID2026"; // demo password
+function $(id){ return document.getElementById(id); }
 
-function nowISO() {
-  return new Date().toISOString();
-}
-
-function loadSession() {
-  try {
+function loadSession(){
+  try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (e) {
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
     return null;
   }
 }
 
-function saveSession(session) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-}
-
-function wipeSession() {
-  localStorage.removeItem(STORAGE_KEY);
-}
-
-function ensureSession() {
-  let s = loadSession();
-  if (!s) {
-    s = {
-      version: 1,
-      createdAt: nowISO(),
-      authed: false,
-      passwordHashHint: "client-side gate",
-      teams: { a: "", b: "" },
-      scores: { a: 0, b: 0 },
-      selectedChallenge: 1,
-      selectedCategoryId: null,
-      selectedRoundId: null,
-      selectedQuestionId: null,
-      // Locks and per-question state
-      locks: {
-        // [challengeId]: { [roundId]: { [questionId]: true } }
-      },
-      // assignment: [challengeId]: { [roundId]: { [questionId]: "a"|"b" } }
-      assignment: {},
-      // roundLocks: [challengeId]: { [roundId]: true }
-      roundLocks: {},
-      lastUpdatedAt: nowISO()
-    };
-    saveSession(s);
-  }
+function saveSession(s){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   return s;
 }
 
-function requireAuthOrRedirect() {
+function ensureSession(){
+  let s = loadSession();
+  if(!s){
+    s = {
+      auth: { ok:false },
+      teams: { a:"", b:"" },
+      scores: { a:0, b:0 },
+      selectedChallenge: 1,
+      selectedRoundId: null,
+      selectedQuestionId: null,
+      // locks: challengeId -> { rounds: {roundId:true}, questions: { roundId: { qid:true } } }
+      locks: {},
+      winner: null, // {team:"a"|"b", name:"", reachedAt:timestamp}
+      ui: {}
+    };
+    saveSession(s);
+  }
+  // normalize
+  if(!s.scores) s.scores = {a:0,b:0};
+  if(!s.teams) s.teams = {a:"",b:""};
+  if(!s.auth) s.auth = {ok:false};
+  if(!s.locks) s.locks = {};
+  return s;
+}
+
+function requireAuthOrRedirect(){
   const s = ensureSession();
-  if (!s.authed) {
+  if(!s.auth || !s.auth.ok){
     window.location.href = "index.html";
     return false;
   }
   return true;
 }
 
-/* UI helpers */
-function $(id) { return document.getElementById(id); }
-
-function setStatus(el, msg, type = "") {
-  if (!el) return;
-  el.classList.remove("status--ok", "status--bad");
-  if (type === "ok") el.classList.add("status--ok");
-  if (type === "bad") el.classList.add("status--bad");
-  el.textContent = msg || "";
+function logoutWipeAll(){
+  localStorage.removeItem(STORAGE_KEY);
+  window.location.href = "index.html";
 }
 
-function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-
-function formatMMSS(totalSeconds) {
-  const s = clamp(totalSeconds, 0, 24 * 3600);
-  const mm = String(Math.floor(s / 60)).padStart(2, "0");
-  const ss = String(s % 60).padStart(2, "0");
-  return `${mm}:${ss}`;
+function resetGameKeepNames(keepNames=true){
+  const s = ensureSession();
+  s.scores = {a:0,b:0};
+  s.selectedRoundId = null;
+  s.selectedQuestionId = null;
+  s.winner = null;
+  if(!keepNames){
+    s.teams = {a:"", b:""};
+  }
+  // NOTE: locks remain as-is
+  saveSession(s);
 }
 
-function otherTeam(team) {
-  return team === "a" ? "b" : "a";
+function getTeamName(s, teamKey){
+  const name = (s.teams && s.teams[teamKey] || "").trim();
+  return name || (teamKey==="a" ? "الفريق الأول" : "الفريق الثاني");
 }
 
-function renderScorebar(container, session) {
-  if (!container) return;
-  container.innerHTML = `
+/* -------------------------
+   Scorebar
+------------------------- */
+function renderScorebar(el, s){
+  if(!el) return;
+  const aName = getTeamName(s,"a");
+  const bName = getTeamName(s,"b");
+  el.innerHTML = `
     <div class="score">
-      <div class="score__name">${escapeHtml(session.teams.a || "الفريق 1")}</div>
-      <div class="score__val">${session.scores.a || 0}</div>
+      <div class="score__val">${toArabicDigits(String(s.scores?.a ?? 0))}</div>
+      <div class="score__name">${escapeHtml(aName)}</div>
     </div>
     <div class="score">
-      <div class="score__name">${escapeHtml(session.teams.b || "الفريق 2")}</div>
-      <div class="score__val">${session.scores.b || 0}</div>
+      <div class="score__val">${toArabicDigits(String(s.scores?.b ?? 0))}</div>
+      <div class="score__name">${escapeHtml(bName)}</div>
     </div>
   `;
 }
 
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+/* -------------------------
+   Locks helpers
+------------------------- */
+function ensureChallengeLocks(s, challengeId){
+  if(!s.locks[challengeId]){
+    s.locks[challengeId] = { rounds:{}, questions:{} };
+  }
+  if(!s.locks[challengeId].rounds) s.locks[challengeId].rounds = {};
+  if(!s.locks[challengeId].questions) s.locks[challengeId].questions = {};
 }
 
-/* Locks helpers */
-function getLockPath(session, challengeId, roundId) {
-  const c = String(challengeId);
-  session.locks[c] = session.locks[c] || {};
-  session.locks[c][roundId] = session.locks[c][roundId] || {};
-  return session.locks[c][roundId];
+function isQuestionLocked(s, challengeId, roundId, questionId){
+  ensureChallengeLocks(s, challengeId);
+  const q = s.locks[challengeId].questions[roundId];
+  return !!(q && q[questionId]);
 }
 
-function getAssignPath(session, challengeId, roundId) {
-  const c = String(challengeId);
-  session.assignment[c] = session.assignment[c] || {};
-  session.assignment[c][roundId] = session.assignment[c][roundId] || {};
-  return session.assignment[c][roundId];
+function lockQuestion(s, challengeId, roundId, questionId){
+  ensureChallengeLocks(s, challengeId);
+  if(!s.locks[challengeId].questions[roundId]){
+    s.locks[challengeId].questions[roundId] = {};
+  }
+  s.locks[challengeId].questions[roundId][questionId] = true;
+  saveSession(s);
 }
 
-function isQuestionLocked(session, challengeId, roundId, questionId) {
-  const p = getLockPath(session, challengeId, roundId);
-  return !!p[questionId];
+function setRoundLocked(s, challengeId, roundId, locked){
+  ensureChallengeLocks(s, challengeId);
+  if(locked) s.locks[challengeId].rounds[roundId] = true;
+  else delete s.locks[challengeId].rounds[roundId];
+  saveSession(s);
 }
 
-function lockQuestion(session, challengeId, roundId, questionId) {
-  const p = getLockPath(session, challengeId, roundId);
-  p[questionId] = true;
-  session.lastUpdatedAt = nowISO();
-  saveSession(session);
+function isRoundLocked(s, challengeId, roundId){
+  ensureChallengeLocks(s, challengeId);
+  return !!s.locks[challengeId].rounds[roundId];
 }
 
-function setAssignedTeam(session, challengeId, roundId, questionId, team) {
-  const p = getAssignPath(session, challengeId, roundId);
-  p[questionId] = team;
-  session.lastUpdatedAt = nowISO();
-  saveSession(session);
+function computeRoundFullyLocked(s, challengeId, roundObj){
+  // roundObj.questions: [{id,...},...]
+  let allLocked = true;
+  for(const q of roundObj.questions){
+    if(!isQuestionLocked(s, challengeId, roundObj.id, q.id)){
+      allLocked = false;
+      break;
+    }
+  }
+  return allLocked;
 }
 
-function getAssignedTeam(session, challengeId, roundId, questionId) {
-  const p = getAssignPath(session, challengeId, roundId);
-  return p[questionId] || null;
+/* -------------------------
+   Assignment per question (stored in session.ui.assignments)
+------------------------- */
+function ensureAssignments(s){
+  if(!s.ui) s.ui = {};
+  if(!s.ui.assignments) s.ui.assignments = {};
+  // assignments[challengeId][roundId][questionId] = "a"|"b"
 }
 
-function setRoundLocked(session, challengeId, roundId, locked) {
-  const c = String(challengeId);
-  session.roundLocks[c] = session.roundLocks[c] || {};
-  session.roundLocks[c][roundId] = !!locked;
-  session.lastUpdatedAt = nowISO();
-  saveSession(session);
+function getAssignedTeam(s, challengeId, roundId, questionId){
+  ensureAssignments(s);
+  const c = s.ui.assignments[challengeId];
+  const r = c ? c[roundId] : null;
+  return r ? r[questionId] : null;
 }
 
-function isRoundLocked(session, challengeId, roundId) {
-  const c = String(challengeId);
-  return !!(session.roundLocks[c] && session.roundLocks[c][roundId]);
+function setAssignedTeam(s, challengeId, roundId, questionId, teamKey){
+  ensureAssignments(s);
+  if(!s.ui.assignments[challengeId]) s.ui.assignments[challengeId] = {};
+  if(!s.ui.assignments[challengeId][roundId]) s.ui.assignments[challengeId][roundId] = {};
+  s.ui.assignments[challengeId][roundId][questionId] = teamKey;
+  saveSession(s);
 }
 
-/* Game resets */
-function resetGameKeepNames(keepNames = true) {
+function otherTeam(teamKey){
+  return teamKey === "a" ? "b" : "a";
+}
+
+/* -------------------------
+   Winner logic
+------------------------- */
+function markWinnerIfReached(s){
+  if(s.winner) return s; // already set once (we won't overwrite)
+  const a = s.scores?.a ?? 0;
+  const b = s.scores?.b ?? 0;
+
+  if(a >= WIN_SCORE){
+    s.winner = { team:"a", name:getTeamName(s,"a"), reachedAt: Date.now() };
+    return saveSession(s);
+  }
+  if(b >= WIN_SCORE){
+    s.winner = { team:"b", name:getTeamName(s,"b"), reachedAt: Date.now() };
+    return saveSession(s);
+  }
+  return s;
+}
+
+function clearWinner(s){
+  s.winner = null;
+  saveSession(s);
+}
+
+/* ✅ فريقين جدد: تصفير النقاط + مسح أسماء الفرق فقط، بدون فتح الأسئلة المقفولة */
+function startNewTeamsKeepLocks(){
   const s = ensureSession();
-  const names = keepNames ? { ...s.teams } : { a: "", b: "" };
-  const authed = s.authed;
+  s.scores = {a:0,b:0};
+  s.teams = {a:"", b:""};
+  s.selectedRoundId = null;
+  s.selectedQuestionId = null;
+  s.winner = null;
+  // assignments optional reset (so old assigned doesn't leak)
+  if(s.ui && s.ui.assignments) s.ui.assignments = {};
+  saveSession(s);
 
-  const newS = ensureSession();
-  newS.authed = authed;
-  newS.teams = names;
-  newS.scores = { a: 0, b: 0 };
-  newS.selectedCategoryId = null;
-  newS.selectedRoundId = null;
-  newS.selectedQuestionId = null;
-  newS.locks = {};
-  newS.assignment = {};
-  newS.roundLocks = {};
-  newS.lastUpdatedAt = nowISO();
-  saveSession(newS);
-  return newS;
+  // نروح لصفحة الدخول لكن بدون كلمة مرور (لأن auth.ok=true)
+  window.location.href = "index.html?mode=newteams";
 }
 
-function logoutWipeAll() {
-  wipeSession();
-  window.location.href = "index.html";
+/* ✅ فتح كل الأسئلة المقفولة بدون لمس النقاط أو أسماء الفرق */
+function unlockAllQuestionsKeepScores(){
+  const s = ensureSession();
+  // clear all locks
+  s.locks = {};
+  // keep scores, teams, auth as is
+  saveSession(s);
+  return s;
 }
 
-/* Challenge data loading */
-async function loadChallengeData(challengeNo) {
-  const id = String(challengeNo);
-  const res = await fetch(`data/challenges/${id}.json`, { cache: "no-store" });
-  if (!res.ok) throw new Error("تعذر تحميل ملف التحدي");
+/* -------------------------
+   Data loaders
+------------------------- */
+async function loadChallengeData(challengeNumber){
+  // fixed challenge 1 for this game
+  const res = await fetch(`data/challenges/challenge-${challengeNumber}.json?v=1`);
+  if(!res.ok) throw new Error("Failed to load data");
   return await res.json();
 }
 
-/* Winner calc across a challenge dataset */
-function computeAllQuestionsLocked(session, challengeData) {
-  const ch = String(challengeData.id);
-  for (const cat of challengeData.categories) {
-    for (const round of cat.rounds) {
-      for (const q of round.questions) {
-        const locked = isQuestionLocked(session, ch, round.id, q.id);
-        if (!locked) return false;
-      }
-    }
-  }
-  return true;
+/* -------------------------
+   UI helpers
+------------------------- */
+function setStatus(el, msg, type){
+  if(!el) return;
+  el.classList.remove("status--ok","status--bad");
+  if(type==="ok") el.classList.add("status--ok");
+  if(type==="bad") el.classList.add("status--bad");
+  el.textContent = msg || "";
 }
 
-function computeRoundFullyLocked(session, challengeId, round) {
-  for (const q of round.questions) {
-    if (!isQuestionLocked(session, challengeId, round.id, q.id)) return false;
-  }
-  return true;
+function escapeHtml(str){
+  return String(str||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function computeWinner(session) {
-  const a = session.scores.a || 0;
-  const b = session.scores.b || 0;
-  if (a === b) return { winner: "tie", line: `تعادل 🤝 (${a} - ${b})` };
-  const team = a > b ? "a" : "b";
-  const name = team === "a" ? (session.teams.a || "الفريق 1") : (session.teams.b || "الفريق 2");
-  return { winner: team, line: `الفائز: ${name} 🏆 (${a} - ${b})` };
+function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+function formatMMSS(totalSeconds){
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  const mm = String(m).padStart(2,"0");
+  const ss = String(s).padStart(2,"0");
+  return toArabicDigits(`${mm}:${ss}`);
 }
