@@ -63,7 +63,7 @@
 
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
 
-  // إزالة ID: نعرض فقط القيمة
+  // عرض القيمة فقط (بدون ID)
   const points = (data.pointsPerQuestion || 10);
   questionMeta.textContent = `القيمة: ${points} نقاط`;
 
@@ -76,7 +76,7 @@
 
   questionText.textContent = selectedQ.text || "—";
 
-  // أزرار تعيين الفريق بأسماء الفرق
+  // تعيين الفريق بأسماء الفرق
   const btnAssignA = $("btnAssignA");
   const btnAssignB = $("btnAssignB");
   const btnSwitch = $("btnSwitch");
@@ -182,12 +182,20 @@
   }
   renderTimer();
 
-  function stopTimer() {
+  function setTimerStateLabel(state) {
+    // state: "ready" | "running" | "paused" | "done"
+    if (state === "running") timerSub.textContent = "شغال";
+    else if (state === "paused") timerSub.textContent = "موقوف";
+    else if (state === "done") timerSub.textContent = "انتهى الوقت";
+    else timerSub.textContent = "جاهز";
+  }
+
+  function stopTimer(toPaused = true) {
     running = false;
     if (t) window.clearInterval(t);
     t = null;
-    btnStartPause.textContent = "ابدأ";
-    timerSub.textContent = "موقوف";
+    btnStartPause.textContent = toPaused ? "▶ ابدأ" : "▶ ابدأ";
+    setTimerStateLabel(toPaused ? "paused" : "ready");
   }
 
   function tick() {
@@ -195,8 +203,11 @@
     if (total <= 0) {
       total = 0;
       renderTimer();
-      stopTimer();
-      timerSub.textContent = "انتهى الوقت";
+      running = false;
+      if (t) window.clearInterval(t);
+      t = null;
+      btnStartPause.textContent = "▶ ابدأ";
+      setTimerStateLabel("done");
       setStatus(statusBox, "انتهى الوقت ⏱️ تقدر تبدّل الفريق أو تمنح النقاط.", "");
       return;
     }
@@ -206,19 +217,27 @@
   btnStartPause.addEventListener("click", () => {
     if (!running) {
       running = true;
-      btnStartPause.textContent = "إيقاف";
-      timerSub.textContent = "شغال";
+      btnStartPause.textContent = "⏸ إيقاف";
+      setTimerStateLabel("running");
       t = window.setInterval(tick, 1000);
     } else {
-      stopTimer();
+      // Pause
+      if (t) window.clearInterval(t);
+      t = null;
+      running = false;
+      btnStartPause.textContent = "▶ ابدأ";
+      setTimerStateLabel("paused");
     }
   });
 
   btnResetTimer.addEventListener("click", () => {
-    stopTimer();
+    if (t) window.clearInterval(t);
+    t = null;
+    running = false;
     total = DEFAULT_SECONDS;
     renderTimer();
-    timerSub.textContent = "جاهز";
+    btnStartPause.textContent = "▶ ابدأ";
+    setTimerStateLabel("ready");
   });
 
   btnPlus10.addEventListener("click", () => {
