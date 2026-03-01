@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - شاشة اللعب</title>
-  <link rel="stylesheet" href="css/style.css?v=6" />
+  <link rel="stylesheet" href="css/style.css?v=7" />
 </head>
 <body>
   <div class="app">
@@ -76,11 +76,17 @@
                 <div class="timer__sub" id="timerSub">جاهز</div>
               </div>
 
-              <div class="row row--wrap" style="justify-content:flex-start;">
-                <button id="btnMinus10" class="btn btn--ghost btn--sm" type="button">-10 ث</button>
-                <button id="btnPlus10" class="btn btn--ghost btn--sm" type="button">+10 ث</button>
-                <button id="btnResetTimer" class="btn btn--ghost btn--sm" type="button">إعادة</button>
-                <button id="btnStartPause" class="btn btn--primary btn--sm" type="button">ابدأ</button>
+              <!-- ✅ ترتيب جديد + ستايل جديد -->
+              <div class="timerControls">
+                <!-- زر ابدأ (أكبر وأوضح) -->
+                <button id="btnStartPause" class="btn btn--primary btn--sm btnStartWide" type="button">ابدأ</button>
+
+                <!-- +/- أصغر ودائري -->
+                <button id="btnPlus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">+10 ث</button>
+                <button id="btnMinus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">-10 ث</button>
+
+                <!-- إعادة آخر شيء على اليسار -->
+                <button id="btnResetTimer" class="btn btn--ghost btn--sm btnResetFar" type="button">إعادة</button>
               </div>
             </div>
 
@@ -123,7 +129,7 @@
     </footer>
   </div>
 
-  <script src="js/common.js?v=6"></script>
-  <script src="js/game.js?v=6"></script>
+  <script src="js/common.js?v=7"></script>
+  <script src="js/game.js?v=7"></script>
 </body>
 </html>
