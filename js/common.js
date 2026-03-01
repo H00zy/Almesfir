@@ -51,9 +51,7 @@ function ensureSession() {
       selectedQuestionId: null,
 
       // Locks and per-question state
-      locks: {
-        // [challengeId]: { [roundId]: { [questionId]: true } }
-      },
+      locks: {},
 
       // assignment: [challengeId]: { [roundId]: { [questionId]: "a"|"b" } }
       assignment: {},
@@ -61,7 +59,7 @@ function ensureSession() {
       // roundLocks: [challengeId]: { [roundId]: true }
       roundLocks: {},
 
-      // ✅ win state (to avoid opening winner many times)
+      // ✅ win state
       winState: null,
 
       lastUpdatedAt: nowISO()
@@ -191,8 +189,7 @@ function markWinner(session, team){
     reached: true,
     team,                 // "a" or "b"
     reachedAt: nowISO(),
-    openedWinnerPage: false, // set true once opened
-    mode: null            // "continue" | "newTeams" (optional)
+    mode: null            // "continue" | "newTeams"
   };
   session.lastUpdatedAt = nowISO();
   saveSession(session);
@@ -243,18 +240,17 @@ function startNewTeamsKeepLocks(teamA, teamB) {
   s.teams = { a: (teamA || "").trim(), b: (teamB || "").trim() };
   s.scores = { a: 0, b: 0 };
 
-  // نبدأ على المتبقي فقط:
   s.selectedCategoryId = null;
   s.selectedRoundId = null;
   s.selectedQuestionId = null;
 
-  // ✅ نبقي الأقفال (locks) كما هي
-  // ✅ ونصفّر التعيينات حتى لا تختلط أسماء الفرق الجديدة
+  // نبقي الأقفال كما هي
+  // ونصفّر التعيينات حتى لا تختلط
   s.assignment = {};
-  // ✅ ونعيد احتساب قفل الجولات لاحقًا داخل rounds.js
+  // إعادة حساب قفل الجولات لاحقًا داخل rounds.js
   s.roundLocks = {};
 
-  // ✅ نلغي حالة الفوز السابقة (فريق جديد)
+  // نلغي حالة الفوز السابقة
   s.winState = null;
 
   s.lastUpdatedAt = nowISO();
@@ -275,7 +271,6 @@ async function loadChallengeData(challengeNo) {
   return await res.json();
 }
 
-/* Winner calc across a challenge dataset */
 function computeAllQuestionsLocked(session, challengeData) {
   const ch = String(challengeData.id);
   for (const cat of challengeData.categories) {
