@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - شاشة اللعب</title>
-  <link rel="stylesheet" href="css/style.css?v=9" />
+  <link rel="stylesheet" href="css/style.css?v=11" />
 </head>
 <body>
   <div class="app">
@@ -84,7 +84,7 @@
 
       </section>
 
-      <!-- ✅ المؤقت بعرض كامل الصفحة (داخل الـ container) -->
+      <!-- المؤقت بعرض كامل -->
       <section class="card timerWide" id="timerCard">
         <div class="row row--space row--wrap">
           <div class="card__title">المؤقت</div>
@@ -97,7 +97,7 @@
           <div class="timerWide__time" id="timerText">00:30</div>
         </div>
 
-        <div class="timerControls timerControls--wide">
+        <div class="timerControls">
           <button id="btnStartPause" class="btn btn--primary btn--sm btnStartWide" type="button">▶ ابدأ</button>
           <button id="btnPlus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">+10 ث</button>
           <button id="btnMinus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">-10 ث</button>
@@ -119,6 +119,19 @@
         </div>
       </section>
 
+      <!-- ✅ لوحة الفوز (تظهر عند الوصول 50) -->
+      <section class="card" id="winnerPanel" style="display:none;">
+        <div class="card__title" id="winnerTitle">🎉</div>
+        <div class="muted" id="winnerDesc">—</div>
+
+        <div class="divider"></div>
+
+        <div class="row row--wrap">
+          <button id="btnContinueAfterWin" class="btn btn--primary" type="button">نكمل اللعب</button>
+          <button id="btnNewTeamsAfterWin" class="btn btn--ghost" type="button">فريقين جدد</button>
+        </div>
+      </section>
+
     </main>
 
     <footer class="footer">
@@ -126,7 +139,7 @@
     </footer>
   </div>
 
-  <script src="js/common.js?v=9"></script>
-  <script src="js/game.js?v=9"></script>
+  <script src="js/common.js?v=11"></script>
+  <script src="js/game.js?v=11"></script>
 </body>
 </html>
