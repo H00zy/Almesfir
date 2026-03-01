@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لعبة العائلة - الأسئلة</title>
+  <title>لعبة العائلة - قائمة الأسئلة</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -18,17 +18,18 @@
       </div>
 
       <div class="topbar__actions">
-        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">New Game</button>
-        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">Logout</button>
+        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">لعبة جديدة</button>
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">تسجيل خروج</button>
       </div>
     </header>
 
     <main class="container">
+
       <section class="card">
         <div class="row row--space row--wrap">
           <div>
             <div class="card__title" id="roundTitle">—</div>
-            <div class="muted" id="roundHint">كل سؤال = 10 نقاط. بعد الاستخدام يُقفل.</div>
+            <div class="muted" id="roundHint">—</div>
           </div>
 
           <div class="scorebar" id="scorebar"></div>
@@ -36,38 +37,40 @@
       </section>
 
       <section class="card">
-        <div class="row row--space row--wrap">
+        <div class="row row--space row--wrap" style="gap:12px">
           <div class="row row--wrap">
-            <span class="pill pill--soft">الخطوة 1: اختر الفريق للسؤال</span>
+            <span class="pill pill--soft">الخطوة 1: عيّن السؤال للفريق</span>
             <span class="pill pill--soft">الخطوة 2: افتح السؤال</span>
             <span class="pill pill--soft">الخطوة 3: من شاشة اللعب امنح النقاط/بدّل الفريق</span>
           </div>
-          <div class="row">
-            <a class="btn btn--ghost btn--sm" href="rounds.html">تغيير الجولة</a>
-          </div>
+
+          <a class="btn btn--ghost btn--sm" href="rounds.html">تغيير الجولة</a>
         </div>
       </section>
 
-      <section id="questionsGrid" class="grid grid--2">
-        <!-- cards generated -->
-      </section>
+      <section class="grid grid--2" id="questionsGrid"></section>
 
       <section class="card" id="finishCard" style="display:none;">
         <div class="card__title">انتهت جميع الأسئلة 🎉</div>
         <div class="muted" id="winnerLine">—</div>
         <div class="divider"></div>
-        <div class="row row--space row--wrap">
-          <div class="muted">تقدر تبدأ لعبة جديدة أو تسوي Logout.</div>
-          <div class="row">
-            <button id="btnNewGame2" class="btn btn--primary" type="button">New Game</button>
-            <button id="btnLogout2" class="btn btn--ghost" type="button">Logout</button>
-          </div>
+        <div class="row row--wrap">
+          <button id="btnNewGame2" class="btn btn--primary" type="button">ابدأ لعبة جديدة</button>
+          <button id="btnLogout2" class="btn btn--ghost" type="button">تسجيل خروج</button>
         </div>
       </section>
+
+      <section class="card">
+        <div class="row row--space row--wrap">
+          <div class="muted">ملاحظة: السؤال بعد استخدامه يُقفل ولا يمكن فتحه مرة ثانية.</div>
+          <a class="btn btn--ghost" href="rounds.html">رجوع</a>
+        </div>
+      </section>
+
     </main>
 
     <footer class="footer">
-      <div class="muted">لا توجد Popups — كل شيء داخل بطاقات</div>
+      <div class="muted">واجهة عربية • بدون نوافذ منبثقة</div>
     </footer>
   </div>
 
