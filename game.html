@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - شاشة اللعب</title>
-  <link rel="stylesheet" href="css/style.css?v=7" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
 </head>
 <body>
   <div class="app">
@@ -41,8 +41,10 @@
         <a class="btn btn--primary" href="questions.html">رجوع للأسئلة</a>
       </section>
 
+      <!-- ✅ شبكة اللعبة: سؤال + تعيين الفريق (فوق) + المؤقت بعرض كامل (تحت) -->
       <section class="grid grid--2" id="qbox">
-        <!-- Question -->
+
+        <!-- Question (Right column in RTL) -->
         <section class="card">
           <div class="row row--space row--wrap">
             <div class="pill pill--soft">السؤال</div>
@@ -64,48 +66,51 @@
           </div>
         </section>
 
-        <!-- Timer + Assignment -->
+        <!-- Assignment (Left column) -->
         <section class="card">
-          <div class="grid" style="grid-template-columns: 1fr; gap:12px;">
-            <div class="card card--inner timer">
+          <div class="card__title">تعيين الفريق</div>
+          <div class="muted">حدد لمن يطرح السؤال (يمكن تبديله أثناء اللعب).</div>
+
+          <div class="divider"></div>
+
+          <div class="row row--wrap" style="justify-content:flex-start;">
+            <button id="btnAssignA" class="btn btn--ghost btn--sm" type="button">تعيين للفريق الأول</button>
+            <button id="btnAssignB" class="btn btn--ghost btn--sm" type="button">تعيين للفريق الثاني</button>
+            <button id="btnSwitch" class="btn btn--soft btn--sm" type="button">بدّل للفريق الآخر</button>
+          </div>
+
+          <div class="status" id="statusBox" aria-live="polite"></div>
+        </section>
+
+        <!-- ✅ Timer full width -->
+        <section class="card span-2">
+          <div class="row row--space row--wrap">
+            <div>
               <div class="card__title">المؤقت</div>
-              <div class="muted">مؤقت داخل الصفحة (بدون نوافذ منبثقة).</div>
-
-              <div class="timer__ring">
-                <div class="timer__time" id="timerText">00:30</div>
-                <div class="timer__sub" id="timerSub">جاهز</div>
-              </div>
-
-              <!-- ✅ ترتيب جديد + ستايل جديد -->
-              <div class="timerControls">
-                <!-- زر ابدأ (أكبر وأوضح) -->
-                <button id="btnStartPause" class="btn btn--primary btn--sm btnStartWide" type="button">ابدأ</button>
-
-                <!-- +/- أصغر ودائري -->
-                <button id="btnPlus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">+10 ث</button>
-                <button id="btnMinus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">-10 ث</button>
-
-                <!-- إعادة آخر شيء على اليسار -->
-                <button id="btnResetTimer" class="btn btn--ghost btn--sm btnResetFar" type="button">إعادة</button>
-              </div>
+              <!-- (1) حذف النص الزايد: ما فيه شرح هنا -->
             </div>
+            <span class="pill" id="timerSub">جاهز</span>
+          </div>
 
-            <div class="card card--inner">
-              <div class="card__title">تعيين الفريق</div>
-              <div class="muted">حدد لمن يطرح السؤال (يمكن تبديله أثناء اللعب).</div>
+          <div class="divider"></div>
 
-              <div class="divider"></div>
+          <div class="timer__ring timerFull">
+            <div class="timer__time" id="timerText">00:30</div>
+          </div>
 
-              <div class="row row--wrap" style="justify-content:flex-start;">
-                <button id="btnAssignA" class="btn btn--ghost btn--sm" type="button">تعيين للفريق الأول</button>
-                <button id="btnAssignB" class="btn btn--ghost btn--sm" type="button">تعيين للفريق الثاني</button>
-                <button id="btnSwitch" class="btn btn--soft btn--sm" type="button">بدّل للفريق الآخر</button>
-              </div>
+          <div class="divider"></div>
 
-              <div class="status" id="statusBox" aria-live="polite"></div>
-            </div>
+          <!-- نفس طلبك: زر ابدأ أعرض + +/- دائري + إعادة آخر شي يسار -->
+          <div class="timerControls">
+            <button id="btnStartPause" class="btn btn--primary btn--sm btnStartWide" type="button">▶ ابدأ</button>
+
+            <button id="btnPlus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">+10 ث</button>
+            <button id="btnMinus10" class="btn btn--ghost btn--sm btnMiniRound" type="button">-10 ث</button>
+
+            <button id="btnResetTimer" class="btn btn--ghost btn--sm btnResetFar" type="button">إعادة</button>
           </div>
         </section>
+
       </section>
 
       <section class="card">
@@ -129,7 +134,7 @@
     </footer>
   </div>
 
-  <script src="js/common.js?v=7"></script>
-  <script src="js/game.js?v=7"></script>
+  <script src="js/common.js?v=8"></script>
+  <script src="js/game.js?v=8"></script>
 </body>
 </html>
