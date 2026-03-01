@@ -63,14 +63,14 @@
 
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
 
-  // عرض القيمة فقط (بدون ID)
   const points = (data.pointsPerQuestion || 10);
   questionMeta.textContent = `القيمة: ${points} نقاط`;
 
   const alreadyLocked = isQuestionLocked(s, challengeId, selectedRound.id, selectedQ.id);
   if (alreadyLocked) {
     lockedNotice.style.display = "block";
-    $("qbox").style.display = "none";
+    $("qboxTop").style.display = "none";
+    $("timerCard").style.display = "none";
     return;
   }
 
@@ -170,6 +170,7 @@
   let running = false;
   let t = null;
 
+  const timerCard = $("timerCard");
   const timerText = $("timerText");
   const timerSub = $("timerSub");
   const btnStartPause = $("btnStartPause");
@@ -183,56 +184,76 @@
   renderTimer();
 
   function setTimerStateLabel(state) {
-    // state: "ready" | "running" | "paused" | "done"
     if (state === "running") timerSub.textContent = "شغال";
     else if (state === "paused") timerSub.textContent = "موقوف";
     else if (state === "done") timerSub.textContent = "انتهى الوقت";
     else timerSub.textContent = "جاهز";
   }
 
-  function stopTimer(toPaused = true) {
-    running = false;
+  function clearFX() {
+    timerCard.classList.remove("timer--urgent", "timer--done", "timer--shake");
+  }
+
+  function stopInterval() {
     if (t) window.clearInterval(t);
     t = null;
-    btnStartPause.textContent = toPaused ? "▶ ابدأ" : "▶ ابدأ";
-    setTimerStateLabel(toPaused ? "paused" : "ready");
+  }
+
+  function stopTimer(state = "paused") {
+    running = false;
+    stopInterval();
+    btnStartPause.textContent = "▶ ابدأ";
+    setTimerStateLabel(state);
+    if (state !== "running") timerCard.classList.remove("timer--urgent");
   }
 
   function tick() {
     total -= 1;
+
+    // آخر 5 ثواني: وميض خفيف
+    if (total <= 5 && total > 0) timerCard.classList.add("timer--urgent");
+
     if (total <= 0) {
       total = 0;
       renderTimer();
       running = false;
-      if (t) window.clearInterval(t);
-      t = null;
+      stopInterval();
+
+      // تأثير نهاية الوقت داخل المؤقت فقط
+      timerCard.classList.remove("timer--urgent");
+      timerCard.classList.add("timer--done", "timer--shake");
+      window.setTimeout(() => timerCard.classList.remove("timer--shake"), 520);
+
       btnStartPause.textContent = "▶ ابدأ";
       setTimerStateLabel("done");
       setStatus(statusBox, "انتهى الوقت ⏱️ تقدر تبدّل الفريق أو تمنح النقاط.", "");
       return;
     }
+
     renderTimer();
   }
 
   btnStartPause.addEventListener("click", () => {
+    // لو كان انتهى الوقت ورجعت تضغط: نشيل تأثير النهاية
+    timerCard.classList.remove("timer--done");
+
     if (!running) {
       running = true;
       btnStartPause.textContent = "⏸ إيقاف";
       setTimerStateLabel("running");
+      stopInterval();
       t = window.setInterval(tick, 1000);
     } else {
-      // Pause
-      if (t) window.clearInterval(t);
-      t = null;
       running = false;
+      stopInterval();
       btnStartPause.textContent = "▶ ابدأ";
       setTimerStateLabel("paused");
     }
   });
 
   btnResetTimer.addEventListener("click", () => {
-    if (t) window.clearInterval(t);
-    t = null;
+    clearFX();
+    stopInterval();
     running = false;
     total = DEFAULT_SECONDS;
     renderTimer();
