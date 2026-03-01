@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لعبة العائلة - شاشة اللعب</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand brand--small">
+        <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
+        <div class="brand__txt">
+          <div class="brand__title">شاشة اللعب</div>
+          <div class="brand__sub" id="sessionLine">—</div>
+        </div>
+      </div>
+
+      <div class="topbar__actions">
+        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">New Game</button>
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">Logout</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <div class="row row--space row--wrap">
+          <div>
+            <div class="card__title" id="roundTitle">—</div>
+            <div class="muted" id="questionMeta">—</div>
+          </div>
+          <div class="scorebar" id="scorebar"></div>
+        </div>
+      </section>
+
+      <section class="card card--question">
+        <div class="row row--space row--wrap">
+          <div class="pill" id="assignedPill">غير معيّن</div>
+          <div class="row">
+            <a class="btn btn--ghost btn--sm" href="questions.html">رجوع للأسئلة</a>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="qbox" id="qbox">
+          <div class="qbox__label">السؤال</div>
+          <div class="qbox__text" id="questionText">—</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="grid grid--2">
+          <div class="card card--inner">
+            <div class="card__title">تعيين الفريق</div>
+            <div class="muted">حدد لمن يُطرح السؤال (يمكن تبديله أثناء اللعب).</div>
+
+            <div class="row row--wrap">
+              <button id="btnAssignA" class="btn btn--soft" type="button">تعيين للفريق 1</button>
+              <button id="btnAssignB" class="btn btn--soft" type="button">تعيين للفريق 2</button>
+              <button id="btnSwitch" class="btn btn--ghost" type="button">بدّل للفريق الآخر</button>
+            </div>
+          </div>
+
+          <div class="card card--inner">
+            <div class="card__title">المؤقت</div>
+            <div class="muted">مؤقت داخل الصفحة (بدون نوافذ منبثقة).</div>
+
+            <div class="timer">
+              <div class="timer__ring">
+                <div class="timer__time" id="timerText">01:00</div>
+                <div class="timer__sub" id="timerSub">جاهز</div>
+              </div>
+
+              <div class="row row--wrap">
+                <button id="btnStartPause" class="btn btn--primary" type="button">ابدأ</button>
+                <button id="btnResetTimer" class="btn btn--ghost" type="button">إعادة</button>
+                <button id="btnPlus10" class="btn btn--ghost" type="button">+10ث</button>
+                <button id="btnMinus10" class="btn btn--ghost" type="button">-10ث</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card card--inner">
+          <div class="card__title">النتيجة / الإقفال</div>
+          <div class="muted">
+            عند الانتهاء: إمّا تمنح 10 نقاط للفريق المعيّن أو تقفل السؤال بدون نقاط.
+            بعد القفل لا يمكن فتحه مرة أخرى.
+          </div>
+
+          <div class="row row--wrap">
+            <button id="btnAward" class="btn btn--primary" type="button">منح 10 نقاط + قفل</button>
+            <button id="btnNoPoints" class="btn btn--soft" type="button">قفل بدون نقاط</button>
+          </div>
+
+          <div class="status" id="statusBox" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="card" id="lockedNotice" style="display:none;">
+        <div class="card__title">هذا السؤال مقفل ✅</div>
+        <div class="muted">لا يمكن إعادة فتحه. ارجع لقائمة الأسئلة لاختيار سؤال آخر.</div>
+        <div class="divider"></div>
+        <div class="row">
+          <a class="btn btn--primary" href="questions.html">رجوع للأسئلة</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="muted">كل شيء محفوظ محليًا • لا سيرفر • مناسب للعرض</div>
+    </footer>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
