@@ -127,22 +127,3 @@ Schema:
 ]
 }
 
-Important rules:
-
-Each round must have exactly 4 questions (q1..q4 recommended)
-Round IDs must be unique within the challenge
-Question IDs must be unique within each round
-
-How state is stored
-
-The game uses localStorage key:
-EID_FAMILY_GAME_SESSION_V1
-
-Stored:
-authed
-team names
-selected challenge / category / round / question
-scores
-per-question locks: once locked cannot open again
-per-question assignment (team A/B)
-per-round locked status
