@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - شاشة اللعب</title>
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
   <div class="app">
@@ -28,7 +28,6 @@
       <section class="card">
         <div class="row row--space row--wrap">
           <div class="scorebar" id="scorebar"></div>
-
           <div class="row row--wrap">
             <a class="btn btn--ghost btn--sm" href="questions.html">رجوع للأسئلة</a>
           </div>
@@ -73,13 +72,13 @@
               <div class="muted">مؤقت داخل الصفحة (بدون نوافذ منبثقة).</div>
 
               <div class="timer__ring">
-                <div class="timer__time" id="timerText">٠١:٠٠</div>
+                <div class="timer__time" id="timerText">00:30</div>
                 <div class="timer__sub" id="timerSub">جاهز</div>
               </div>
 
               <div class="row row--wrap" style="justify-content:flex-start;">
-                <button id="btnMinus10" class="btn btn--ghost btn--sm" type="button">-١٠ ث</button>
-                <button id="btnPlus10" class="btn btn--ghost btn--sm" type="button">+١٠ ث</button>
+                <button id="btnMinus10" class="btn btn--ghost btn--sm" type="button">-10 ث</button>
+                <button id="btnPlus10" class="btn btn--ghost btn--sm" type="button">+10 ث</button>
                 <button id="btnResetTimer" class="btn btn--ghost btn--sm" type="button">إعادة</button>
                 <button id="btnStartPause" class="btn btn--primary btn--sm" type="button">ابدأ</button>
               </div>
@@ -106,13 +105,13 @@
       <section class="card">
         <div class="card__title">النتيجة / الإقفال</div>
         <div class="muted">
-          عند الانتهاء: إمّا تمنح ١٠ نقاط للفريق المعيّن ثم يُقفل السؤال، أو تُقفل السؤال بدون نقاط.
+          عند الانتهاء: إمّا تمنح 10 نقاط للفريق المعيّن ثم يُقفل السؤال، أو تُقفل السؤال بدون نقاط.
         </div>
 
         <div class="divider"></div>
 
         <div class="row row--wrap">
-          <button id="btnAward" class="btn btn--primary" type="button">منح ١٠ نقاط + قفل</button>
+          <button id="btnAward" class="btn btn--primary" type="button">منح 10 نقاط + قفل</button>
           <button id="btnNoPoints" class="btn btn--ghost" type="button">قفل بدون نقاط</button>
         </div>
       </section>
@@ -120,11 +119,11 @@
     </main>
 
     <footer class="footer">
-      <div class="muted">تصميم عربي • أرقام هندية • تجربة عائلية</div>
+      <div class="muted">تصميم عربي • تجربة عائلية</div>
     </footer>
   </div>
 
-  <script src="js/common.js?v=4"></script>
-  <script src="js/game.js?v=4"></script>
+  <script src="js/common.js?v=6"></script>
+  <script src="js/game.js?v=6"></script>
 </body>
 </html>
