@@ -17,7 +17,7 @@
 
   btnLogout.addEventListener("click", () => logoutWipeAll());
   btnNewGame.addEventListener("click", () => {
-    resetGameKeepNames(true);
+    resetGameKeepNames(true); // يصفر كل شيء ويرجع الأسئلة متاحة
     window.location.reload();
   });
 
