@@ -2,8 +2,11 @@
   if (!requireAuthOrRedirect()) return;
 
   const s = ensureSession();
-  s.selectedChallenge = 1;
+  s.selectedChallenge = 1; // تحدي واحد فقط
   saveSession(s);
+
+  const teamAName = s.teams.a || "الفريق الأول";
+  const teamBName = s.teams.b || "الفريق الثاني";
 
   const sessionLine = $("sessionLine");
   const scorebar = $("scorebar");
@@ -20,12 +23,12 @@
   const btnLogout2 = $("btnLogout2");
 
   btnLogout.addEventListener("click", () => logoutWipeAll());
-  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
+  btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
 
-  if (btnNewGame2) btnNewGame2.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
+  if (btnNewGame2) btnNewGame2.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
   if (btnLogout2) btnLogout2.addEventListener("click", () => logoutWipeAll());
 
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
+  sessionLine.textContent = `${teamAName} ضد ${teamBName}`;
   renderScorebar(scorebar, s);
 
   if (!s.selectedRoundId) {
@@ -63,16 +66,18 @@
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
   roundHint.textContent = selectedRound.hint || "كل سؤال = 10 نقاط. بعد الاستخدام يُقفل.";
 
+  // تحديث حالة قفل الجولة
   const fullyLocked = computeRoundFullyLocked(s, challengeId, selectedRound);
   setRoundLocked(s, challengeId, selectedRound.id, fullyLocked);
 
   questionsGrid.innerHTML = "";
+
   selectedRound.questions.forEach((q, idx) => {
     const locked = isQuestionLocked(s, challengeId, selectedRound.id, q.id);
     const assigned = getAssignedTeam(s, challengeId, selectedRound.id, q.id);
 
-    const assignLabel = assigned
-      ? (assigned === "a" ? (s.teams.a || "الفريق 1") : (s.teams.b || "الفريق 2"))
+    const assignedLabel = assigned
+      ? (assigned === "a" ? teamAName : teamBName)
       : "غير معيّن";
 
     const card = document.createElement("div");
@@ -87,30 +92,33 @@
       </div>
 
       <div class="qcard__assign">
-        <span class="pill">الفريق المعيّن: <strong>${escapeHtml(assignLabel)}</strong></span>
+        <span class="pill">الفريق المعيّن: <strong>${escapeHtml(assignedLabel)}</strong></span>
         <div class="row row--wrap">
-          <button class="btn btn--ghost btn--sm" type="button" data-assign="a" ${locked ? "disabled" : ""}>تعيين للفريق 1</button>
-          <button class="btn btn--ghost btn--sm" type="button" data-assign="b" ${locked ? "disabled" : ""}>تعيين للفريق 2</button>
+          <button class="btn btn--ghost btn--sm" type="button" data-assign="a" ${locked ? "disabled" : ""}>تعيين لـ ${escapeHtml(teamAName)}</button>
+          <button class="btn btn--ghost btn--sm" type="button" data-assign="b" ${locked ? "disabled" : ""}>تعيين لـ ${escapeHtml(teamBName)}</button>
         </div>
       </div>
 
       <div class="qcard__actions">
         <button class="btn ${locked ? "btn--ghost" : "btn--primary"}" type="button" data-open ${locked ? "disabled" : ""}>
-          ${locked ? "مقفل" : "افتح السؤال"}
+          ${locked ? "هذا السؤال مقفل" : "افتح السؤال"}
         </button>
       </div>
     `;
 
+    // تعيين الفريق
     card.querySelectorAll("button[data-assign]").forEach(btn => {
       btn.addEventListener("click", () => {
         const team = btn.getAttribute("data-assign");
         const ns = ensureSession();
         ns.selectedChallenge = 1;
         setAssignedTeam(ns, challengeId, selectedRound.id, q.id, team);
+        saveSession(ns);
         window.location.reload();
       });
     });
 
+    // فتح شاشة اللعب
     card.querySelector("button[data-open]").addEventListener("click", () => {
       const ns = ensureSession();
       ns.selectedChallenge = 1;
@@ -123,6 +131,7 @@
     questionsGrid.appendChild(card);
   });
 
+  // نهاية اللعبة (كل الأسئلة مقفلة)
   const allDone = computeAllQuestionsLocked(s, data);
   if (allDone) {
     finishCard.style.display = "block";
