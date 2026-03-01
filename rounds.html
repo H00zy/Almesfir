@@ -18,41 +18,47 @@
       </div>
 
       <div class="topbar__actions">
-        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">New Game</button>
-        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">Logout</button>
+        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">لعبة جديدة</button>
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">تسجيل خروج</button>
       </div>
     </header>
 
     <main class="container">
+
       <section class="card">
         <div class="row row--space row--wrap">
           <div>
             <div class="card__title">اختر فئة ثم Round</div>
-            <div class="muted">الفئات/الجولات تأتي من ملف JSON الخاص بالتحدي المختار.</div>
+            <div class="muted">كل Round يحتوي 4 أسئلة — عند إغلاقها كلها يصبح الـ Round مقفل.</div>
           </div>
 
-          <div class="scorebar" id="scorebar">
-            <!-- filled by JS -->
+          <div class="scorebar" id="scorebar"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="progressWrap">
+          <div class="muted" id="progressLine">—</div>
+          <div class="progressBar" aria-hidden="true">
+            <div class="progressBar__fill" id="progressFill" style="width:0%"></div>
           </div>
         </div>
       </section>
 
-      <section id="content" class="grid grid--auto">
-        <!-- categories + rounds generated here -->
-      </section>
+      <!-- Categories rendered here -->
+      <section id="content" class="stack"></section>
 
       <section class="card">
         <div class="row row--space row--wrap">
-          <div class="muted">تقدر ترجع لأي فئة، لكن الـ rounds/الأسئلة المقفلة تظل مقفلة.</div>
-          <div class="row">
-            <a class="btn btn--ghost" href="index.html">رجوع للدخول</a>
-          </div>
+          <div class="muted">ملاحظة: الأقفال والنقاط محفوظة تلقائيًا على نفس الجهاز.</div>
+          <a class="btn btn--ghost" href="index.html">رجوع</a>
         </div>
       </section>
+
     </main>
 
     <footer class="footer">
-      <div class="muted">جلسة محفوظة محليًا عبر localStorage</div>
+      <div class="muted">لا توجد إعلانات/نوافذ منبثقة • تجربة عائلية لطيفة</div>
     </footer>
   </div>
 
