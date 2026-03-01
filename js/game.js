@@ -5,6 +5,9 @@
   s.selectedChallenge = 1;
   saveSession(s);
 
+  const teamAName = (s.teams && s.teams.a && s.teams.a.trim()) ? s.teams.a.trim() : "الفريق الأول";
+  const teamBName = (s.teams && s.teams.b && s.teams.b.trim()) ? s.teams.b.trim() : "الفريق الثاني";
+
   const sessionLine = $("sessionLine");
   const scorebar = $("scorebar");
   const roundTitle = $("roundTitle");
@@ -19,7 +22,7 @@
   btnLogout.addEventListener("click", () => logoutWipeAll());
   btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href="rounds.html"; });
 
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
+  sessionLine.textContent = `${teamAName} ضد ${teamBName}`;
   renderScorebar(scorebar, s);
 
   if (!s.selectedRoundId || !s.selectedQuestionId) {
@@ -59,32 +62,21 @@
   }
 
   roundTitle.textContent = `${selectedCat.title} • ${selectedRound.title}`;
-  questionMeta.textContent = `القيمة: 10 نقاط • سؤال ID: ${selectedQ.id}`;
+
+  // (2) إزالة ID بالكامل: فقط القيمة
+  const points = (data.pointsPerQuestion || 10);
+  questionMeta.textContent = `القيمة: ${toArabicDigits(String(points))} نقاط`;
 
   const alreadyLocked = isQuestionLocked(s, challengeId, selectedRound.id, selectedQ.id);
   if (alreadyLocked) {
     lockedNotice.style.display = "block";
     $("qbox").style.display = "none";
-    document.querySelectorAll(".card--inner").forEach(x => x.style.display = "none");
     return;
   }
 
   questionText.textContent = selectedQ.text || "—";
 
-  function updateAssignedPill() {
-    const ns = ensureSession();
-    const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
-    if (!assigned) {
-      assignedPill.textContent = "غير معيّن";
-      assignedPill.style.borderColor = "rgba(255,255,255,0.18)";
-      return null;
-    }
-    const name = assigned === "a" ? (ns.teams.a || "الفريق 1") : (ns.teams.b || "الفريق 2");
-    assignedPill.textContent = `موجّه إلى: ${name}`;
-    assignedPill.style.borderColor = "rgba(77,214,255,0.28)";
-    return assigned;
-  }
-
+  // (4) أسماء الفرق بدل الفريق 1/2
   const btnAssignA = $("btnAssignA");
   const btnAssignB = $("btnAssignB");
   const btnSwitch = $("btnSwitch");
@@ -92,11 +84,26 @@
   const btnNoPoints = $("btnNoPoints");
   const statusBox = $("statusBox");
 
+  btnAssignA.textContent = `تعيين لـ ${teamAName}`;
+  btnAssignB.textContent = `تعيين لـ ${teamBName}`;
+
+  function updateAssignedPill() {
+    const ns = ensureSession();
+    const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
+    if (!assigned) {
+      assignedPill.textContent = "غير معيّن";
+      return null;
+    }
+    const name = assigned === "a" ? teamAName : teamBName;
+    assignedPill.textContent = `موجّه إلى: ${name}`;
+    return assigned;
+  }
+
   btnAssignA.addEventListener("click", () => {
     const ns = ensureSession();
     ns.selectedChallenge = 1;
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, "a");
-    setStatus(statusBox, "تم تعيين السؤال للفريق 1.", "ok");
+    setStatus(statusBox, `تم تعيين السؤال لـ ${teamAName}.`, "ok");
     updateAssignedPill();
   });
 
@@ -104,7 +111,7 @@
     const ns = ensureSession();
     ns.selectedChallenge = 1;
     setAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id, "b");
-    setStatus(statusBox, "تم تعيين السؤال للفريق 2.", "ok");
+    setStatus(statusBox, `تم تعيين السؤال لـ ${teamBName}.`, "ok");
     updateAssignedPill();
   });
 
@@ -127,7 +134,7 @@
       setStatus(statusBox, "لازم تعيّن الفريق قبل منح النقاط.", "bad");
       return;
     }
-    ns.scores[assigned] = (ns.scores[assigned] || 0) + 10;
+    ns.scores[assigned] = (ns.scores[assigned] || 0) + points;
     saveSession(ns);
 
     lockQuestion(ns, challengeId, selectedRound.id, selectedQ.id);
@@ -136,8 +143,8 @@
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
     renderScorebar(scorebar, ns);
-    setStatus(statusBox, "تم منح 10 نقاط وقفل السؤال ✅", "ok");
-    window.setTimeout(() => window.location.href = "questions.html", 450);
+    setStatus(statusBox, `تم منح ${toArabicDigits(String(points))} نقاط وقفل السؤال ✅`, "ok");
+    window.setTimeout(() => window.location.href = "questions.html", 350);
   });
 
   btnNoPoints.addEventListener("click", () => {
@@ -148,12 +155,12 @@
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
     setStatus(statusBox, "تم قفل السؤال بدون نقاط ✅", "ok");
-    window.setTimeout(() => window.location.href = "questions.html", 450);
+    window.setTimeout(() => window.location.href = "questions.html", 350);
   });
 
   updateAssignedPill();
 
-  // Timer
+  // ---- Timer (3) with Arabic digits ----
   let total = 60;
   let running = false;
   let t = null;
@@ -165,7 +172,9 @@
   const btnPlus10 = $("btnPlus10");
   const btnMinus10 = $("btnMinus10");
 
-  function renderTimer() { timerText.textContent = formatMMSS(total); }
+  function renderTimer() {
+    timerText.textContent = toArabicDigits(formatMMSS(total));
+  }
   renderTimer();
 
   function stopTimer() {
