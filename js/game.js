@@ -133,6 +133,37 @@
     updateAssignedPill();
   });
 
+  // ✅ فتح صفحة الفوز مرة واحدة
+  function maybeOpenWinnerIfReached(ns) {
+    const target = getWinTarget();
+    const a = ns.scores.a || 0;
+    const b = ns.scores.b || 0;
+
+    if (hasWinner(ns)) return; // already reached and recorded
+
+    if (a >= target) {
+      markWinner(ns, "a");
+    } else if (b >= target) {
+      markWinner(ns, "b");
+    } else {
+      return;
+    }
+
+    // افتح winner.html في تبويب جديد (مرة واحدة)
+    const again = ensureSession();
+    if (again.winState && again.winState.openedWinnerPage) return;
+
+    again.winState.openedWinnerPage = true;
+    saveSession(again);
+
+    try {
+      window.open("winner.html", "_blank");
+    } catch (e) {
+      // إذا المتصفح منع فتح تبويب، نخلي اللاعب يروح يدويًا
+      setStatus(statusBox, "الفائز وصل 50! افتح صفحة winner.html للاحتفال 🎉", "ok");
+    }
+  }
+
   btnAward.addEventListener("click", () => {
     const ns = ensureSession();
     const assigned = getAssignedTeam(ns, challengeId, selectedRound.id, selectedQ.id);
@@ -150,6 +181,10 @@
     setRoundLocked(ns, challengeId, selectedRound.id, fullyLocked);
 
     renderScorebar(scorebar, ns);
+
+    // ✅ تحقق الفوز
+    maybeOpenWinnerIfReached(ns);
+
     setStatus(statusBox, `تم منح ${points} نقاط وقفل السؤال ✅`, "ok");
     window.setTimeout(() => window.location.href = "questions.html", 350);
   });
@@ -169,7 +204,7 @@
 
   // -------------------------
   // Timer (default 30 seconds)
-  // ✅ الجديد: ما يشتغل إلا إذا الفريق معيّن
+  // ✅ ما يشتغل إلا إذا الفريق معيّن
   // -------------------------
   const DEFAULT_SECONDS = 30;
 
@@ -177,7 +212,7 @@
   let running = false;
   let t = null;
 
-  const timerCard = document.getElementById("timerCard"); // موجود في تصميمك الأخير
+  const timerCard = document.getElementById("timerCard");
   const timerText = $("timerText");
   const timerSub = $("timerSub");
   const btnStartPause = $("btnStartPause");
@@ -207,14 +242,6 @@
     t = null;
   }
 
-  function stopTimer(state = "paused") {
-    running = false;
-    stopInterval();
-    btnStartPause.textContent = "▶ ابدأ";
-    setTimerStateLabel(state);
-    if (timerCard) timerCard.classList.remove("timer--urgent");
-  }
-
   function tick() {
     total -= 1;
 
@@ -242,7 +269,6 @@
   }
 
   btnStartPause.addEventListener("click", () => {
-    // ✅ شرط: لا تشغيل بدون تعيين فريق
     const assigned = getAssignedNow();
     if (!assigned) {
       setStatus(statusBox, "عيّن الفريق أولاً ثم شغّل المؤقت.", "bad");
