@@ -441,3 +441,55 @@ img{max-width:100%; height:auto}
   .btnStartWide{flex-basis: 100%; min-width: 100%;}
   .btnResetFar{margin-inline-start: 0;}
 }
+
+/* =========================
+   Game Layout Helpers
+   ========================= */
+.span-2{ grid-column: 1 / -1; }
+
+.timerFull{
+  width: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* =========================
+   Game Timer Controls (Premium)
+   ========================= */
+.timerControls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+/* زر ابدأ: أعرض ويمسك الانتباه */
+.btnStartWide{
+  flex: 1 1 240px;
+  min-width: 220px;
+  justify-content:center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 10px 20px rgba(79,70,229,0.18);
+}
+
+/* أزرار +10/-10: أصغر وأكثر دائرية */
+.btnMiniRound{
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  min-width: 88px;
+  text-align:center;
+}
+
+/* زر إعادة آخر شيء (يسار) */
+.btnResetFar{
+  margin-inline-start: auto;
+}
+
+@media (max-width: 520px){
+  .btnStartWide{flex-basis: 100%; min-width: 100%;}
+  .btnResetFar{margin-inline-start: 0;}
+}
