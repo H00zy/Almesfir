@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لعبة العائلة - شاشة اللعب</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
   <div class="app">
@@ -12,111 +12,119 @@
       <div class="brand brand--small">
         <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
         <div class="brand__txt">
-          <div class="brand__title">شاشة اللعب</div>
+          <div class="brand__title" id="roundTitle">—</div>
           <div class="brand__sub" id="sessionLine">—</div>
         </div>
       </div>
 
       <div class="topbar__actions">
-        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">New Game</button>
-        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">Logout</button>
+        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">لعبة جديدة</button>
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">تسجيل خروج</button>
       </div>
     </header>
 
     <main class="container">
+
       <section class="card">
         <div class="row row--space row--wrap">
-          <div>
-            <div class="card__title" id="roundTitle">—</div>
-            <div class="muted" id="questionMeta">—</div>
-          </div>
           <div class="scorebar" id="scorebar"></div>
-        </div>
-      </section>
 
-      <section class="card card--question">
-        <div class="row row--space row--wrap">
-          <div class="pill" id="assignedPill">غير معيّن</div>
-          <div class="row">
+          <div class="row row--wrap">
             <a class="btn btn--ghost btn--sm" href="questions.html">رجوع للأسئلة</a>
           </div>
         </div>
+      </section>
 
+      <section class="card card--question" id="lockedNotice" style="display:none;">
+        <div class="card__title">هذا السؤال مقفل</div>
+        <div class="muted">تم استخدام هذا السؤال سابقًا ولا يمكن فتحه مرة ثانية.</div>
         <div class="divider"></div>
+        <a class="btn btn--primary" href="questions.html">رجوع للأسئلة</a>
+      </section>
 
-        <div class="qbox" id="qbox">
-          <div class="qbox__label">السؤال</div>
-          <div class="qbox__text" id="questionText">—</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="grid grid--2">
-          <div class="card card--inner">
-            <div class="card__title">تعيين الفريق</div>
-            <div class="muted">حدد لمن يُطرح السؤال (يمكن تبديله أثناء اللعب).</div>
-
-            <div class="row row--wrap">
-              <button id="btnAssignA" class="btn btn--soft" type="button">تعيين للفريق 1</button>
-              <button id="btnAssignB" class="btn btn--soft" type="button">تعيين للفريق 2</button>
-              <button id="btnSwitch" class="btn btn--ghost" type="button">بدّل للفريق الآخر</button>
-            </div>
+      <section class="grid grid--2" id="qbox">
+        <!-- Question -->
+        <section class="card">
+          <div class="row row--space row--wrap">
+            <div class="pill pill--soft">السؤال</div>
+            <div class="pill" id="questionMeta">القيمة: —</div>
           </div>
 
-          <div class="card card--inner">
-            <div class="card__title">المؤقت</div>
-            <div class="muted">مؤقت داخل الصفحة (بدون نوافذ منبثقة).</div>
+          <div class="divider"></div>
 
-            <div class="timer">
+          <div class="qbox">
+            <div class="qbox__label">اقرأ السؤال بصوت واضح</div>
+            <div class="qbox__text" id="questionText">—</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row row--space row--wrap">
+            <span class="pill" id="assignedPill">غير معيّن</span>
+            <span class="muted">ملاحظة: يمكنك تغيير الفريق أثناء اللعب.</span>
+          </div>
+        </section>
+
+        <!-- Timer + Assignment -->
+        <section class="card">
+          <div class="grid" style="grid-template-columns: 1fr; gap:12px;">
+            <div class="card card--inner timer">
+              <div class="card__title">المؤقت</div>
+              <div class="muted">مؤقت داخل الصفحة (بدون نوافذ منبثقة).</div>
+
               <div class="timer__ring">
-                <div class="timer__time" id="timerText">01:00</div>
+                <div class="timer__time" id="timerText">٠١:٠٠</div>
                 <div class="timer__sub" id="timerSub">جاهز</div>
               </div>
 
-              <div class="row row--wrap">
-                <button id="btnStartPause" class="btn btn--primary" type="button">ابدأ</button>
-                <button id="btnResetTimer" class="btn btn--ghost" type="button">إعادة</button>
-                <button id="btnPlus10" class="btn btn--ghost" type="button">+10ث</button>
-                <button id="btnMinus10" class="btn btn--ghost" type="button">-10ث</button>
+              <div class="row row--wrap" style="justify-content:flex-start;">
+                <button id="btnMinus10" class="btn btn--ghost btn--sm" type="button">-١٠ ث</button>
+                <button id="btnPlus10" class="btn btn--ghost btn--sm" type="button">+١٠ ث</button>
+                <button id="btnResetTimer" class="btn btn--ghost btn--sm" type="button">إعادة</button>
+                <button id="btnStartPause" class="btn btn--primary btn--sm" type="button">ابدأ</button>
               </div>
             </div>
+
+            <div class="card card--inner">
+              <div class="card__title">تعيين الفريق</div>
+              <div class="muted">حدد لمن يطرح السؤال (يمكن تبديله أثناء اللعب).</div>
+
+              <div class="divider"></div>
+
+              <div class="row row--wrap" style="justify-content:flex-start;">
+                <button id="btnAssignA" class="btn btn--ghost btn--sm" type="button">تعيين للفريق الأول</button>
+                <button id="btnAssignB" class="btn btn--ghost btn--sm" type="button">تعيين للفريق الثاني</button>
+                <button id="btnSwitch" class="btn btn--soft btn--sm" type="button">بدّل للفريق الآخر</button>
+              </div>
+
+              <div class="status" id="statusBox" aria-live="polite"></div>
+            </div>
           </div>
+        </section>
+      </section>
+
+      <section class="card">
+        <div class="card__title">النتيجة / الإقفال</div>
+        <div class="muted">
+          عند الانتهاء: إمّا تمنح ١٠ نقاط للفريق المعيّن ثم يُقفل السؤال، أو تُقفل السؤال بدون نقاط.
         </div>
 
         <div class="divider"></div>
 
-        <div class="card card--inner">
-          <div class="card__title">النتيجة / الإقفال</div>
-          <div class="muted">
-            عند الانتهاء: إمّا تمنح 10 نقاط للفريق المعيّن أو تقفل السؤال بدون نقاط.
-            بعد القفل لا يمكن فتحه مرة أخرى.
-          </div>
-
-          <div class="row row--wrap">
-            <button id="btnAward" class="btn btn--primary" type="button">منح 10 نقاط + قفل</button>
-            <button id="btnNoPoints" class="btn btn--soft" type="button">قفل بدون نقاط</button>
-          </div>
-
-          <div class="status" id="statusBox" aria-live="polite"></div>
+        <div class="row row--wrap">
+          <button id="btnAward" class="btn btn--primary" type="button">منح ١٠ نقاط + قفل</button>
+          <button id="btnNoPoints" class="btn btn--ghost" type="button">قفل بدون نقاط</button>
         </div>
       </section>
 
-      <section class="card" id="lockedNotice" style="display:none;">
-        <div class="card__title">هذا السؤال مقفل ✅</div>
-        <div class="muted">لا يمكن إعادة فتحه. ارجع لقائمة الأسئلة لاختيار سؤال آخر.</div>
-        <div class="divider"></div>
-        <div class="row">
-          <a class="btn btn--primary" href="questions.html">رجوع للأسئلة</a>
-        </div>
-      </section>
     </main>
 
     <footer class="footer">
-      <div class="muted">كل شيء محفوظ محليًا • لا سيرفر • مناسب للعرض</div>
+      <div class="muted">تصميم عربي • أرقام هندية • تجربة عائلية</div>
     </footer>
   </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/common.js?v=4"></script>
+  <script src="js/game.js?v=4"></script>
 </body>
 </html>
