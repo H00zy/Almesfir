@@ -1,60 +1,126 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لعبة العائلة - الفئات</title>
-  <link rel="stylesheet" href="css/style.css?v=11" />
-</head>
-<body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand brand--small">
-        <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
-        <div class="brand__txt">
-          <div class="brand__title">اختر الفئة</div>
-          <div class="brand__sub" id="sessionLine">—</div>
+(async function () {
+  if (!requireAuthOrRedirect()) return;
+
+  const s = ensureSession();
+  s.selectedChallenge = 1;
+  saveSession(s);
+
+  const teamAName = (s.teams?.a || "").trim() || "الفريق الأول";
+  const teamBName = (s.teams?.b || "").trim() || "الفريق الثاني";
+
+  const sessionLine = document.getElementById("sessionLine");
+  if (sessionLine) sessionLine.textContent = `${teamAName} ضد ${teamBName}`;
+
+  const btnLogout = document.getElementById("btnLogout");
+  const btnNewGame = document.getElementById("btnNewGame");
+  if (btnLogout) btnLogout.addEventListener("click", () => logoutWipeAll());
+  if (btnNewGame) btnNewGame.addEventListener("click", () => { resetGameKeepNames(true); window.location.href = "rounds.html"; });
+
+  renderScorebar(document.getElementById("scorebar"), s);
+
+  // زر فتح جميع الأسئلة المقفولة
+  const btnUnlockAll = document.getElementById("btnUnlockAll");
+  if (btnUnlockAll) {
+    btnUnlockAll.addEventListener("click", () => {
+      const ns = ensureSession();
+      if (ns.locks) delete ns.locks;
+      if (ns.roundLocks) delete ns.roundLocks;
+      saveSession(ns);
+      window.location.reload();
+    });
+  }
+
+  // تحميل البيانات
+  let data;
+  try {
+    data = await loadChallengeData(1);
+  } catch (e) {
+    const wrap = document.getElementById("categoriesWrap");
+    if (wrap) {
+      wrap.innerHTML = `
+        <div class="muted">تعذر تحميل بيانات الفئات.</div>
+        <div class="muted" style="margin-top:6px; font-size:12px;">
+          السبب غالباً مسار ملف البيانات. (تم إصلاحه في common.js) — جرّب تحديث الصفحة تحديث قوي.
         </div>
-      </div>
+      `;
+    }
+    return;
+  }
 
-      <div class="topbar__actions">
-        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">لعبة جديدة</button>
-        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">تسجيل خروج</button>
-      </div>
-    </header>
+  const wrap = document.getElementById("categoriesWrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
 
-    <main class="container">
-      <section class="card">
-        <div class="row row--space row--wrap">
-          <div class="scorebar" id="scorebar"></div>
-        </div>
-      </section>
+  for (const cat of (data.categories || [])) {
+    const block = document.createElement("div");
+    block.className = "categoryBlock";
+    if (cat.type) block.setAttribute("data-type", cat.type);
 
-      <section class="card">
-        <div class="card__title">الفئات</div>
-        <div class="muted">اختر فئة ثم اختر الجولة المطلوبة.</div>
+    const head = document.createElement("div");
+    head.className = "categoryBlock__head";
 
-        <div class="divider"></div>
+    const left = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "categoryBlock__title";
+    title.textContent = cat.title || "—";
 
-        <div class="stack" id="categoriesWrap"></div>
+    left.appendChild(title);
 
-        <div class="divider"></div>
+    if (cat.subtitle) {
+      const sub = document.createElement("div");
+      sub.className = "categoryBlock__sub";
+      sub.textContent = cat.subtitle;
+      left.appendChild(sub);
+    }
 
-        <div class="row row--space row--wrap">
-          <a class="btn btn--ghost" href="index.html">رجوع</a>
+    head.appendChild(left);
+    block.appendChild(head);
 
-          <!-- ✅ زر جديد -->
-          <button id="btnUnlockAll" class="btn btn--soft" type="button">فتح جميع الأسئلة المقفولة</button>
-        </div>
-      </section>
-    </main>
+    const roundsGrid = document.createElement("div");
+    roundsGrid.className = "categoryBlock__rounds";
 
-    <footer class="footer">
-      <div class="muted">تصميم عربي • تجربة عائلية</div>
-    </footer>
-  </div>
+    for (const r of (cat.rounds || [])) {
+      const card = document.createElement("div");
+      card.className = "roundCard";
 
-  <script src="js/common.js?v=11"></script>
-  <script src="js/rounds.js?v=11"></script>
-</body>
-</html>
+      const top = document.createElement("div");
+      top.className = "roundCard__top";
+
+      const rTitle = document.createElement("div");
+      rTitle.className = "roundCard__title";
+      rTitle.textContent = r.title || "—";
+
+      top.appendChild(rTitle);
+      card.appendChild(top);
+
+      const meta = document.createElement("div");
+      meta.className = "roundCard__meta";
+      meta.textContent = "٤ أسئلة";
+      card.appendChild(meta);
+
+      const actions = document.createElement("div");
+      actions.className = "roundCard__actions";
+
+      const btn = document.createElement("button");
+      btn.className = "btn btn--primary btn--sm";
+      btn.type = "button";
+      btn.textContent = "اختيار";
+
+      btn.addEventListener("click", () => {
+        const ns = ensureSession();
+        ns.selectedRoundId = r.id;
+        ns.selectedQuestionId = null;
+        saveSession(ns);
+        window.location.href = "questions.html";
+      });
+
+      actions.appendChild(btn);
+      card.appendChild(actions);
+
+      roundsGrid.appendChild(card);
+    }
+
+    block.appendChild(roundsGrid);
+    wrap.appendChild(block);
+  }
+})();
