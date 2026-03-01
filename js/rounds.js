@@ -56,7 +56,7 @@
 
   data.categories.forEach(cat => {
     // compute category stats
-    let catTotalRounds = cat.rounds.length;
+    const catTotalRounds = cat.rounds.length;
     let catLockedRounds = 0;
 
     let catTotalQ = 0;
@@ -65,7 +65,6 @@
     cat.rounds.forEach(r => {
       catTotalQ += r.questions.length;
 
-      // round fully locked?
       const fullyLocked = computeRoundFullyLocked(s, challengeId, r);
       if (fullyLocked) {
         catLockedRounds++;
@@ -83,6 +82,7 @@
 
     const block = document.createElement("section");
     block.className = "categoryBlock";
+    block.setAttribute("data-type", cat.id); // grandparents / parents / grandkids
 
     block.innerHTML = `
       <div class="categoryBlock__head">
@@ -95,8 +95,8 @@
           <span class="badge ${catLockedRounds === catTotalRounds ? "badge--locked" : "badge--open"}">
             ${catLockedRounds === catTotalRounds ? "مقفلة بالكامل" : "متاحة"}
           </span>
-          <span class="badge">Rounds: ${catLockedRounds}/${catTotalRounds}</span>
-          <span class="badge">أسئلة: ${catLockedQ}/${catTotalQ}</span>
+          <span class="badge">الجولات: ${catLockedRounds}/${catTotalRounds}</span>
+          <span class="badge">الأسئلة: ${catLockedQ}/${catTotalQ}</span>
         </div>
       </div>
 
@@ -117,7 +117,6 @@
     cat.rounds.forEach(r => {
       const fullyLocked = isRoundLocked(s, challengeId, r.id) || computeRoundFullyLocked(s, challengeId, r);
 
-      // per-round question stats
       const roundTotal = r.questions.length;
       let roundLocked = 0;
       r.questions.forEach(q => {
@@ -131,7 +130,7 @@
         <div class="roundCard__top">
           <div>
             <div class="roundCard__title">${escapeHtml(r.title)}</div>
-            <div class="roundCard__meta">${escapeHtml(r.hint || "Round يحتوي 4 أسئلة")}</div>
+            <div class="roundCard__meta">${escapeHtml(r.hint || "هذه الجولة تحتوي 4 أسئلة")}</div>
           </div>
           <span class="badge ${fullyLocked ? "badge--locked" : "badge--open"}">${fullyLocked ? "مقفول" : "متاح"}</span>
         </div>
@@ -149,7 +148,7 @@
 
         <div class="roundCard__actions">
           <button class="btn ${fullyLocked ? "btn--ghost" : "btn--primary"} btn--sm" type="button" ${fullyLocked ? "disabled" : ""}>
-            ${fullyLocked ? "🔒 مقفل" : "ابدأ هذا الـ Round"}
+            ${fullyLocked ? "🔒 مقفل" : "ابدأ الجولة"}
           </button>
         </div>
       `;
