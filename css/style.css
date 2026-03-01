@@ -400,3 +400,44 @@ img{max-width:100%; height:auto}
   border-color: rgba(56,189,248,0.45);
   background: linear-gradient(180deg, rgba(56,189,248,0.10), #ffffff);
 }
+
+/* =========================
+   Game Timer Controls (Premium)
+   ========================= */
+.timerControls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+/* زر ابدأ: أعرض ويمسك الانتباه */
+.btnStartWide{
+  flex: 1 1 170px;          /* يتمدد */
+  min-width: 160px;
+  justify-content:center;
+  padding: 12px 16px;       /* أكبر شوي */
+  border-radius: 14px;      /* نفس أسلوب الأزرار */
+  box-shadow: 0 10px 20px rgba(79,70,229,0.18);
+}
+
+/* أزرار +10/-10: أصغر وأكثر دائرية */
+.btnMiniRound{
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-radius: 999px;     /* دائري أكثر */
+  font-weight: 900;
+  min-width: 78px;          /* يحافظ على شكل مرتب */
+  text-align:center;
+}
+
+/* زر إعادة يكون آخر شي على اليسار */
+.btnResetFar{
+  margin-inline-start: auto; /* في RTL يدفعه لنهاية الصف (اليسار) */
+}
+
+/* تحسين بسيط للموبايل */
+@media (max-width: 520px){
+  .btnStartWide{flex-basis: 100%; min-width: 100%;}
+  .btnResetFar{margin-inline-start: 0;}
+}
