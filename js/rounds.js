@@ -15,20 +15,38 @@
   const btnLogout = $("btnLogout");
   const btnNewGame = $("btnNewGame");
 
+  const btnUnlockAll = $("btnUnlockAll");
+  const unlockStatus = $("unlockStatus");
+
   btnLogout.addEventListener("click", () => logoutWipeAll());
   btnNewGame.addEventListener("click", () => {
     resetGameKeepNames(true);
     window.location.reload();
   });
 
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
+  // ✅ فتح جميع الأسئلة المقفولة (بدون تغيير النقاط أو أسماء الفرق)
+  if (btnUnlockAll) {
+    btnUnlockAll.addEventListener("click", () => {
+      unlockAllQuestionsKeepScores();
+      setStatus(unlockStatus, "تم فتح جميع الأسئلة المقفولة ✅", "ok");
+      window.setTimeout(() => window.location.reload(), 250);
+    });
+  }
+
+  const teamA = (s.teams?.a || "").trim() || "الفريق الأول";
+  const teamB = (s.teams?.b || "").trim() || "الفريق الثاني";
+  sessionLine.textContent = `${teamA} ضد ${teamB}`;
   renderScorebar(scorebar, s);
 
   let data;
   try {
     data = await loadChallengeData(1);
   } catch (e) {
-    content.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات اللعبة (data/challenges/1.json).</div></div>`;
+    content.innerHTML = `
+      <div class="card">
+        <div class="card__title">خطأ</div>
+        <div class="muted">تعذر تحميل بيانات اللعبة (data/challenges/challenge-1.json).</div>
+      </div>`;
     return;
   }
 
@@ -48,7 +66,7 @@
   }
 
   const pct = totalQ ? Math.round((lockedQ / totalQ) * 100) : 0;
-  progressLine.textContent = `التقدّم: ${lockedQ}/${totalQ} سؤال مقفل (${pct}%)`;
+  progressLine.textContent = `التقدّم: ${toArabicDigits(lockedQ)}/${toArabicDigits(totalQ)} سؤال مقفل (${toArabicDigits(pct)}٪)`;
   progressFill.style.width = `${pct}%`;
 
   // ---- render categories as large premium blocks ----
@@ -95,8 +113,8 @@
           <span class="badge ${catLockedRounds === catTotalRounds ? "badge--locked" : "badge--open"}">
             ${catLockedRounds === catTotalRounds ? "مقفلة بالكامل" : "متاحة"}
           </span>
-          <span class="badge">الجولات: ${catLockedRounds}/${catTotalRounds}</span>
-          <span class="badge">الأسئلة: ${catLockedQ}/${catTotalQ}</span>
+          <span class="badge">الجولات: ${toArabicDigits(catLockedRounds)}/${toArabicDigits(catTotalRounds)}</span>
+          <span class="badge">الأسئلة: ${toArabicDigits(catLockedQ)}/${toArabicDigits(catTotalQ)}</span>
         </div>
       </div>
 
@@ -104,7 +122,7 @@
         <div class="categoryBar" aria-hidden="true">
           <div class="categoryBar__fill" style="width:${catPct}%"></div>
         </div>
-        <div class="muted categoryBlock__barTxt">${catPct}% من أسئلة الفئة مقفلة</div>
+        <div class="muted categoryBlock__barTxt">${toArabicDigits(catPct)}٪ من أسئلة الفئة مقفلة</div>
       </div>
 
       <div class="categoryBlock__rounds" id="rounds-${cat.id}"></div>
@@ -143,7 +161,7 @@
               return `<span class="dot ${locked ? "dot--on" : ""}"></span>`;
             }).join("")}
           </div>
-          <div class="muted">مقفلة: ${roundLocked}/${roundTotal}</div>
+          <div class="muted">مقفلة: ${toArabicDigits(roundLocked)}/${toArabicDigits(roundTotal)}</div>
         </div>
 
         <div class="roundCard__actions">
@@ -159,7 +177,6 @@
         ns.selectedChallenge = 1;
         ns.selectedCategoryId = cat.id;
         ns.selectedRoundId = r.id;
-        ns.lastUpdatedAt = nowISO();
         saveSession(ns);
         window.location.href = "questions.html";
       });
