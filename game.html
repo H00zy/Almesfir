@@ -34,6 +34,50 @@
         </div>
       </section>
 
+      <!-- ✅ لوحة الفوز (داخل الصفحة - بدون نوافذ منبثقة) -->
+      <section class="card" id="winnerPanel" style="display:none;">
+        <div class="row row--space row--wrap">
+          <div>
+            <div class="card__title" id="winnerTitle">🎉 فاز الفريق!</div>
+            <div class="muted" id="winnerDesc">وصل إلى 50 نقطة أولاً.</div>
+          </div>
+          <span class="pill pill--soft">شرط الفوز: 50 نقطة</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row row--wrap">
+          <button id="btnContinuePlay" class="btn btn--primary" type="button">نكمل اللعب</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card card--inner">
+          <div class="card__title">فريقين جدد (النقاط تصفر – الأسئلة المقفولة تبقى مقفولة)</div>
+          <div class="muted">اكتب أسماء الفريقين الجدد ثم ابدأ المنافسة على باقي الأسئلة.</div>
+
+          <div class="divider"></div>
+
+          <div class="grid grid--2">
+            <div class="field">
+              <div class="label">اسم الفريق الأول</div>
+              <input id="newTeamA" class="input" placeholder="مثال: فريق 1" />
+            </div>
+            <div class="field">
+              <div class="label">اسم الفريق الثاني</div>
+              <input id="newTeamB" class="input" placeholder="مثال: فريق 2" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row row--wrap">
+            <button id="btnStartNewTeams" class="btn btn--ghost" type="button">بدء بفريقين جدد</button>
+            <span class="muted">* لن يتم فتح أي سؤال مقفول.</span>
+          </div>
+        </div>
+      </section>
+
       <section class="card card--question" id="lockedNotice" style="display:none;">
         <div class="card__title">هذا السؤال مقفل</div>
         <div class="muted">تم استخدام هذا السؤال سابقًا ولا يمكن فتحه مرة ثانية.</div>
@@ -116,19 +160,6 @@
         <div class="row row--wrap">
           <button id="btnAward" class="btn btn--primary" type="button">منح 10 نقاط + قفل</button>
           <button id="btnNoPoints" class="btn btn--ghost" type="button">قفل بدون نقاط</button>
-        </div>
-      </section>
-
-      <!-- ✅ لوحة الفوز (تظهر عند الوصول 50) -->
-      <section class="card" id="winnerPanel" style="display:none;">
-        <div class="card__title" id="winnerTitle">🎉</div>
-        <div class="muted" id="winnerDesc">—</div>
-
-        <div class="divider"></div>
-
-        <div class="row row--wrap">
-          <button id="btnContinueAfterWin" class="btn btn--primary" type="button">نكمل اللعب</button>
-          <button id="btnNewTeamsAfterWin" class="btn btn--ghost" type="button">فريقين جدد</button>
         </div>
       </section>
 
