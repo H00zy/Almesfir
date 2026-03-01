@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لعبة العائلة - اختيار الجولة</title>
-  <link rel="stylesheet" href="css/style.css?v=12" />
+  <title>لعبة العائلة - الفئات</title>
+  <link rel="stylesheet" href="css/style.css?v=11" />
 </head>
 <body>
   <div class="app">
@@ -12,7 +12,7 @@
       <div class="brand brand--small">
         <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
         <div class="brand__txt">
-          <div class="brand__title">اختيار الفئة</div>
+          <div class="brand__title">اختر الفئة</div>
           <div class="brand__sub" id="sessionLine">—</div>
         </div>
       </div>
@@ -24,52 +24,37 @@
     </header>
 
     <main class="container">
-
       <section class="card">
         <div class="row row--space row--wrap">
-          <div>
-            <div class="card__title">اختر فئة ثم جولة</div>
-            <div class="muted">كل جولة تحتوي 4 أسئلة — عند إغلاقها كلها تصبح الجولة مقفلة.</div>
-          </div>
-
           <div class="scorebar" id="scorebar"></div>
         </div>
-
-        <div class="divider"></div>
-
-        <!-- ✅ زر فتح جميع الأسئلة المقفولة -->
-        <div class="row row--space row--wrap">
-          <button id="btnUnlockAll" class="btn btn--ghost btn--sm" type="button">فتح جميع الأسئلة المقفولة</button>
-          <div class="status" id="unlockStatus" aria-live="polite"></div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="progressWrap">
-          <div class="muted" id="progressLine">—</div>
-          <div class="progressBar" aria-hidden="true">
-            <div class="progressBar__fill" id="progressFill" style="width:0%"></div>
-          </div>
-        </div>
       </section>
-
-      <section id="content" class="stack"></section>
 
       <section class="card">
+        <div class="card__title">الفئات</div>
+        <div class="muted">اختر فئة ثم اختر الجولة المطلوبة.</div>
+
+        <div class="divider"></div>
+
+        <div class="stack" id="categoriesWrap"></div>
+
+        <div class="divider"></div>
+
         <div class="row row--space row--wrap">
-          <div class="muted">ملاحظة: الأقفال والنقاط محفوظة تلقائيًا على نفس الجهاز.</div>
           <a class="btn btn--ghost" href="index.html">رجوع</a>
+
+          <!-- ✅ زر جديد -->
+          <button id="btnUnlockAll" class="btn btn--soft" type="button">فتح جميع الأسئلة المقفولة</button>
         </div>
       </section>
-
     </main>
 
     <footer class="footer">
-      <div class="muted">تجربة عائلية خفيفة • بدون نوافذ منبثقة</div>
+      <div class="muted">تصميم عربي • تجربة عائلية</div>
     </footer>
   </div>
 
-  <script src="js/common.js?v=12"></script>
-  <script src="js/rounds.js?v=12"></script>
+  <script src="js/common.js?v=11"></script>
+  <script src="js/rounds.js?v=11"></script>
 </body>
 </html>
