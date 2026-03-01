@@ -1,95 +1,62 @@
-(async function () {
-  if (!requireAuthOrRedirect()) return;
-
-  const s = ensureSession();
-
-  const sessionLine = $("sessionLine");
-  const scorebar = $("scorebar");
-  const content = $("content");
-
-  const btnLogout = $("btnLogout");
-  const btnNewGame = $("btnNewGame");
-
-  btnLogout.addEventListener("click", () => logoutWipeAll());
-  btnNewGame.addEventListener("click", () => {
-    resetGameKeepNames(true);
-    window.location.reload();
-  });
-
-  // تحدي واحد فقط
-  s.selectedChallenge = 1;
-  saveSession(s);
-
-  sessionLine.textContent = `${s.teams.a || "الفريق 1"} ضد ${s.teams.b || "الفريق 2"}`;
-  renderScorebar(scorebar, s);
-
-  let data;
-  try {
-    data = await loadChallengeData(1);
-  } catch (e) {
-    content.innerHTML = `<div class="card"><div class="card__title">خطأ</div><div class="muted">تعذر تحميل بيانات اللعبة (data/challenges/1.json).</div></div>`;
-    return;
-  }
-
-  content.innerHTML = "";
-  const challengeId = String(data.id);
-
-  data.categories.forEach(cat => {
-    const totalRounds = cat.rounds.length;
-    let lockedRounds = 0;
-
-    cat.rounds.forEach(r => {
-      const fullyLocked = computeRoundFullyLocked(s, challengeId, r);
-      if (fullyLocked) {
-        lockedRounds++;
-        setRoundLocked(s, challengeId, r.id, true);
-      } else {
-        setRoundLocked(s, challengeId, r.id, false);
-      }
-    });
-
-    const catTile = document.createElement("div");
-    catTile.className = "tile";
-    catTile.innerHTML = `
-      <div class="tile__title">${escapeHtml(cat.title)}</div>
-      <div class="tile__sub">${escapeHtml(cat.subtitle || "")}</div>
-      <div class="tile__footer">
-        <div class="row row--wrap">
-          <span class="badge ${lockedRounds === totalRounds ? "badge--locked" : "badge--open"}">
-            ${lockedRounds === totalRounds ? "مقفلة بالكامل" : "متاحة"}
-          </span>
-          <span class="badge">Rounds: ${lockedRounds}/${totalRounds}</span>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لعبة العائلة - اختيار الجولة</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand brand--small">
+        <img class="brand__logo" src="assets/images/logo.png" alt="الشعار" onerror="this.style.display='none'" />
+        <div class="brand__txt">
+          <div class="brand__title">اختيار الجولة</div>
+          <div class="brand__sub" id="sessionLine">—</div>
         </div>
-        <span class="pill pill--soft">اختر Round</span>
       </div>
-      <div class="divider"></div>
-      <div class="grid" style="grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px;" id="rounds-${cat.id}"></div>
-    `;
 
-    content.appendChild(catTile);
+      <div class="topbar__actions">
+        <button id="btnNewGame" class="btn btn--ghost btn--sm" type="button">New Game</button>
+        <button id="btnLogout" class="btn btn--ghost btn--sm" type="button">Logout</button>
+      </div>
+    </header>
 
-    const roundsWrap = catTile.querySelector(`#rounds-${cat.id}`);
-    cat.rounds.forEach(r => {
-      const fullyLocked = isRoundLocked(s, challengeId, r.id) || computeRoundFullyLocked(s, challengeId, r);
+    <main class="container">
+      <section class="card">
+        <div class="row row--space row--wrap">
+          <div>
+            <div class="card__title">اختر فئة ثم Round</div>
+            <div class="muted">الفئات/الجولات تأتي من ملف JSON الخاص بالتحدي المختار.</div>
+          </div>
 
-      const btn = document.createElement("button");
-      btn.className = `btn ${fullyLocked ? "btn--ghost" : "btn--soft"}`;
-      btn.type = "button";
-      btn.disabled = fullyLocked;
-      btn.textContent = fullyLocked ? `🔒 ${r.title}` : r.title;
+          <div class="scorebar" id="scorebar">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </section>
 
-      btn.addEventListener("click", () => {
-        const ns = ensureSession();
-        ns.selectedChallenge = 1;
-        ns.selectedCategoryId = cat.id;
-        ns.selectedRoundId = r.id;
-        ns.lastUpdatedAt = nowISO();
-        saveSession(ns);
-        window.location.href = "questions.html";
-      });
+      <section id="content" class="grid grid--auto">
+        <!-- categories + rounds generated here -->
+      </section>
 
-      roundsWrap.appendChild(btn);
-    });
-  });
+      <section class="card">
+        <div class="row row--space row--wrap">
+          <div class="muted">تقدر ترجع لأي فئة، لكن الـ rounds/الأسئلة المقفلة تظل مقفلة.</div>
+          <div class="row">
+            <a class="btn btn--ghost" href="index.html">رجوع للدخول</a>
+          </div>
+        </div>
+      </section>
+    </main>
 
-})();
+    <footer class="footer">
+      <div class="muted">جلسة محفوظة محليًا عبر localStorage</div>
+    </footer>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/rounds.js"></script>
+</body>
+</html>
